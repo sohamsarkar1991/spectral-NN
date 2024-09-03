@@ -143,9 +143,9 @@ def cov_mat(K,d,method,O=None):
     D = int(K**d)
     C = np.zeros([D,D],dtype=float)
     for i in range(D):
-        s = u[i,:]
+        s = u[i]
         for j in range(i,D):
-            t = u_[j]
+            t = u[j]
             C[i,j] = method(s,t)
             C[j,i] = C[i,j]
     return C
@@ -205,15 +205,15 @@ def datagen_AR1_simple(N,K,d,replicates=1,method=None,rot=None,gam=0.5,N0=100):
         f=open(filename,'w')
         f.close()
         x0 = np.random.normal(loc=0.,scale=1,size=len(lam))
-        x0 = np.sum(E*lam*x,axis=1).reshape(1,-1)
+        x0 = np.sum(E*lam*x0,axis=1).reshape(1,-1)
         for n in range(N0): #burn-in, not to be saved
             z = np.random.normal(loc=0.,scale=1.,size=len(lam))
-            z = np.sum(E*lam*x,axis=1).reshape(1,-1)
+            z = np.sum(E*lam*z,axis=1).reshape(1,-1)
             x0 = gam*x0 + z
         f = open(filename,'a')
         for n in range(N): #after burn-in, to be saved
             z = np.random.normal(loc=0.,scale=1.,size=len(lam))
-            z = np.sum(E*lam*x,axis=1).reshape(1,-1)
+            z = np.sum(E*lam*z,axis=1).reshape(1,-1)
             x0 = gam*x0 + z
             np.savetxt(f,x0,fmt='%.10f')
         f.close()
