@@ -18,7 +18,7 @@ print(f"Using {device} device")
 
 #import matplotlib.pyplot as plt
 
-#sys.path.insert(1, os.path.join("C:\\", "Soham", "Git", "spectral-NN", "source_codes"))
+sys.path.insert(1, os.path.join("C:\\", "Soham", "Git", "spectral-NN", "source_codes"))
 #sys.path.insert(1, os.path.join("C:\\", "Users", "Soham", "Git", "spectral-NN", "source_codes"))
 
 import SpectralNetworks as spectNN
