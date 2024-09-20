@@ -116,7 +116,7 @@ class loss_spectralNN:
 ##### Early stopping routine #####
 class EarlyStopping:
     """Early stops the training if validation loss doesn't improve after a given patience."""
-    def __init__(self, patience=10, delta=1e-4, filename='checkpoint_cnet.pt'):
+    def __init__(self, patience=10, delta=1e-4, filename='checkpoint_spectNN.pt'):
         """
         Args:
             patience (int): How long to wait after last time validation loss improved.
@@ -167,7 +167,7 @@ class EarlyStopping:
 ##### Save and load best state_dict #####        
 class BestState:
     """Early stops the training if validation loss doesn't improve after a given patience."""
-    def __init__(self, filename='checkpoint_cnet.pt'):
+    def __init__(self, filename='checkpoint_spectNN.pt'):
         """
         Args:
             filename : file on which the best model will be stored
@@ -205,6 +205,7 @@ class BestState:
 
 ##### Optimization routine #####
 
+""" Need to modify """
 def cnet_optim_best(x,u,model,loss_fn,optimizer,split,epochs=1000,burn_in=500,interval=1,checkpoint_file='Checkpoint.pt'):
     """
     Optimization routine with on-the-go error computation. Returns the model state that produced the best error.
