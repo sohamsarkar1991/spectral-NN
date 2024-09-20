@@ -192,6 +192,9 @@ def datagen_AR1_simple(N,K,d,replicates=1,method=None,rot=None,gam=0.5,N0=100):
     """
     ##### For the innovation Z #####
     ##### Z and X_0 have the same distribution
+    filename = 'locations.dat'
+    print_locations(K,d,filename)
+        
     print('Basis generation started')
     lam, E = sqrt_mat(cov_mat(K,d,method,rot))
     print('Basis generated')
@@ -199,8 +202,6 @@ def datagen_AR1_simple(N,K,d,replicates=1,method=None,rot=None,gam=0.5,N0=100):
     for repl in range(replicates):
         #np.random.seed(int(np.random.rand()*(2**32-1)))
         print('Replicate '+str(repl+1))
-        filename = 'locations'+str(repl+1)+'.dat'
-        print_locations(K,d,filename)
         filename = 'Example'+str(repl+1)+'.dat'
         f=open(filename,'w')
         f.close()
