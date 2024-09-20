@@ -22,22 +22,9 @@ def batch_CV(D,batch_size=10): # points randomly shuffled each time, iterated th
             fold += 1
         yield np.sort(indices[fold*batch_size:])
 
-
-def batch_CV_old(D,batch_size=10): # points randomly shuffled each time, iterated through all points
-    if batch_size==None or batch_size>D:
-        batch_size = D
-    folds = int(D/batch_size)
-    Q = []
-    indices = np.random.choice(D,D,replace=False)
-    for fold in range(folds):
-        Q_tr = np.sort(indices[fold*batch_size:(fold+1)*batch_size])
-        Q.append(Q_tr)
-        del Q_tr
-    return Q
-
 ##### Loss function #####
 
-def loss_COV(x,x_hat):
+def loss_COV(x,x_tilde):
     """
     |||\widehat{C}_N - \widetilde{C}_N|||_2^2
     \widehat{C}_N   - empirical covaraince of X_1,\ldots,X_N
