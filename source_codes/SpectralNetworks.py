@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-"""
-Module to create Spectral Neural Network models.
-A model can be created by using
-spectralNNShallow(N,d,M,L,act_fn,init) - for shallow
-or spectralNNDeep(N,d,M,L,depth,width,act_fn,init) - for deep
-or spectralNNDeepshared(N,d,M,L,depth,width,act_fn,init) - for deepshared
-N - Number of fields (integer)
-d - dimension (integer)
-M, L, depth, width - network parameters (integer)
-act_fn - activation function \sigma; needs to be an element from torch.nn activation function
-init - initialization for the weights of the model; biases are initialized as zero.
-"""
+######################################################################################################
+## Module to create Spectral Neural Network models.
+## A model can be created by using
+## spectralNNShallow(N,d,M,L,act_fn,init) - for shallow
+## or spectralNNDeep(N,d,M,L,depth,width,act_fn,init) - for deep
+## or spectralNNDeepshared(N,d,M,L,depth,width,act_fn,init) - for deepshared
+## Args: N - Number of fields (integer)
+##       d - dimension (integer)
+##       M, L, depth, width - network parameters (integer)
+##       act_fn - activation function \sigma; needs to be an element from torch.nn activation function
+##       init - initialization for the weights of the model; biases are initialized as zero.
+#######################################################################################################
 
 import torch
 
