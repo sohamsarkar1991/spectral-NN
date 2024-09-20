@@ -22,30 +22,96 @@ def batch_CV(D,batch_size=10): # points randomly shuffled each time, iterated th
             fold += 1
         yield np.sort(indices[fold*batch_size:])
 
-##### Loss function #####
+##### Loss module #####
+class loss_spectralNN:
+    """Module to compute the loss function associated with the spectral NN estimator"""
+    def __init__(self, N, wt_fn, grid_size = 100, q=10):
+        """
+        Args:
+            N - sample size (length of functional time-series)
+            wt_fn - a function to compute the weights 
+                        for spectral density estimation.
+            grid_size - size of the discrete grid on [-pi,pi]
+                        for choice of theta.
+            q - lag value for spectral density estimation.
+        """
+        self.N = N
+        self.q = q
+        self.thetas = torch.arange(start=-self.q/(self.q+1),end=self.q/(self.q+1),step=1/(self.q+1),dtype=torch.float32)*np.pi
+        hs = np.arange(start=-self.q,stop=self.q+0.5,step=1.,dtype="float32")
+        self.C_diff = torch.from_numpy(np.array([[h1-h2 for h2 in hs] for h1 in hs]))
+        self.w = torch.from_numpy(wt_fn(hs/self.q))
 
-def loss_COV(x,x_tilde):
-    """
-    |||\widehat{C}_N - \widetilde{C}_N|||_2^2
-    \widehat{C}_N   - empirical covaraince of X_1,\ldots,X_N
-    \widetilde{C}_N - empirical covariance of X^{NN}_1,\ldots,X^{NN}_N
-    """
-    D = x.shape[1]
-    #x_hat = x_hat - torch.mean(x_hat,dim=0,keepdim=True)
-    l1 = torch.matmul(x,x.T)/D
-    l2 = torch.matmul(x_hat,x_hat.T)/D
-    l3 = torch.matmul(x,x_hat.T)/D
-    l = torch.mean(l1**2) + torch.mean(l2**2) - 2*torch.mean(l3**2) + torch.mean(l1)**2 + torch.mean(l2)**2 - 2*torch.mean(l3)**2
-    return l
+    def inner_sum(self,I11,I22,I12,h1,h2):
+        """Function used to compute the elements of A"""
+        """Only defined for non-negative h1,h2"""
+        """
+        Args:
+            I11, I22, I12 - inner-product matrices.
+            h1, h2 - lag indices
+        """
+        if h1 == 0 and h2 == 0:
+            a1 = torch.sum(I11*I11)
+            a2 = torch.sum(I22*I22)
+            a3 = torch.sum(I12*I12)
+            return a1 + a2 - 2*a3
+        elif h1 == 0:
+            a1 = torch.sum(I11[:,h2:]*I11[:,:-h2])
+            a2 = torch.sum(I22[:,h2:]*I22[:,:-h2])
+            a3 = torch.sum(I12[:,h2:]*I12[:,:-h2])
+            a4 = torch.sum(I12[h2:,:]*I12[:-h2,:])
+            return a1 + a2 - a3 - a4
+        elif h2 == 0:
+            a1 = torch.sum(I11[h1:,:]*I11[:-h1,:])
+            a2 = torch.sum(I22[h1:,:]*I22[:-h1,:])
+            a3 = torch.sum(I12[h1:,:]*I12[:-h1,:])
+            a4 = torch.sum(I12[:,h1:]*I12[:,:-h1])
+            return a1 + a2 - a3 - a4
+        else:
+            a1 = torch.sum(I11[h1:,h2:]*I11[:-h1,:-h2])
+            a2 = torch.sum(I22[h1:,h2:]*I22[:-h1,:-h2])
+            a3 = torch.sum(I12[h1:,h2:]*I12[:-h1,:-h2])
+            a4 = torch.sum(I12[h2:,h1:]*I12[:-h2,:-h1])
+            return a1 + a2 - a3 - a4
 
-def loss_MSE(x,x_hat):
-    """
-    MSE loss -
-    N^{-1}\sum_{n=1}^N \|X_n-X^{NN}_n\|^2
-    """
-    x_hat = x_hat - torch.mean(x_hat,dim=0,keepdim=True)
-    l = torch.mean((x-x_hat)**2)
-    return l
+    def inner_part(self, x, x_tilde):
+        """
+        Calculates the inner part of the loss function a(h,h') for h,h'=-q,...,q
+
+        Args:
+            x - observed functional time series (NxD matrix)
+            x_tilde - fitted time seris using neural networks (NxD matrix)
+        """
+        I11 = torch.matmul(x,x.T)
+        I22 = torch.matmul(x_tilde,x_tilde.T)
+        I12 = torch.matmul(x,x_tilde.T)
+        A = torch.zeros([2*self.q+1,2*self.q+1],dtype=torch.float32,requires_grad=False)
+        for h1 in range(self.q):
+            for h2 in range(h1,self.q):
+                A[self.q+h1,self.q+h2] = self.inner_sum(I11,I22,I12,h1,h2)
+                A[self.q-h1,self.q-h2] = A[self.q+h1,self.q+h2]
+                A[self.q-h1,self.q+h2] = A[self.q+h1,self.q+h2]
+                A[self.q+h1,self.q-h2] = A[self.q+h1,self.q+h2]
+                A[self.q+h2,self.q+h1] = A[self.q+h1,self.q+h2]
+                A[self.q-h2,self.q-h1] = A[self.q+h1,self.q+h2]
+                A[self.q-h2,self.q+h1] = A[self.q+h1,self.q+h2]
+                A[self.q+h2,self.q-h1] = A[self.q+h1,self.q+h2]
+
+        #for h1 in range(self.q):
+        #    for h2 in range(self.q):
+        #        A[self.q+h1,self.q+h2] = self.inner_sum(I11,I22,I12,h1,h2)
+        #        A[self.q-h1,self.q-h2] = A[self.q+h1,self.q+h2]
+        #        A[self.q-h1,self.q+h2] = A[self.q+h1,self.q+h2]
+        #        A[self.q+h1,self.q-h2] = A[self.q+h1,self.q+h2]
+        
+        return A
+
+    def loss_fn(self, x, x_tilde):
+        A = self.inner_part(x, x_tilde)
+        l = 0.
+        for theta in self.thetas:
+            l += torch.sqrt(torch.matmul(self.w,torch.matmul(torch.cos(theta*self.C_diff)*A,self.w)))/(self.N**2)
+        return l/(2*self.q+1)
 
 ##### Early stopping routine #####
 class EarlyStopping:
