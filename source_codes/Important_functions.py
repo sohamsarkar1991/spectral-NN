@@ -25,7 +25,7 @@ def batch_CV(D,batch_size=10): # points randomly shuffled each time, iterated th
 ##### Loss module #####
 class loss_spectralNN:
     """Module to compute the loss function associated with the spectral NN estimator"""
-    def __init__(self, N, wt_fn, grid_size = 100, q=10):
+    def __init__(self, N, wt_fn, grid_size = 100, q=10, device="cpu"):
         """
         Args:
             N - sample size (length of functional time-series)
@@ -37,10 +37,11 @@ class loss_spectralNN:
         """
         self.N = N
         self.q = q
-        self.thetas = torch.arange(start=-self.q/(self.q+1),end=self.q/(self.q+1),step=1/(self.q+1),dtype=torch.float32)*np.pi
+        self.thetas = torch.arange(start=-self.q/(self.q+1),end=self.q/(self.q+1),step=1/(self.q+1),dtype=torch.float32,device=device)*np.pi
         hs = np.arange(start=-self.q,stop=self.q+0.5,step=1.,dtype="float32")
-        self.C_diff = torch.from_numpy(np.array([[h1-h2 for h2 in hs] for h1 in hs]))
-        self.w = torch.from_numpy(wt_fn(hs/self.q))
+        self.C_diff = torch.from_numpy(np.array([[h1-h2 for h2 in hs] for h1 in hs])).to(device)
+        self.w = torch.from_numpy(wt_fn(hs/self.q)).to(device)
+        self.device = device
 
     def inner_sum(self,I11,I22,I12,h1,h2):
         """Function used to compute the elements of A"""
@@ -85,7 +86,7 @@ class loss_spectralNN:
         I11 = torch.matmul(x,x.T)
         I22 = torch.matmul(x_tilde,x_tilde.T)
         I12 = torch.matmul(x,x_tilde.T)
-        A = torch.zeros([2*self.q+1,2*self.q+1],dtype=torch.float32,requires_grad=False)
+        A = torch.zeros([2*self.q+1,2*self.q+1],dtype=torch.float32,device=self.device,requires_grad=False)
         for h1 in range(self.q):
             for h2 in range(h1,self.q):
                 A[self.q+h1,self.q+h2] = self.inner_sum(I11,I22,I12,h1,h2)

@@ -18,14 +18,14 @@ import torch
 
 ##### Shallow spectral-NN #####
 class spectralNNShallow(torch.nn.Module):
-    def __init__(self,N,d,M,L,act_fn=torch.nn.Sigmoid(),init=torch.nn.init.xavier_normal_):
+    def __init__(self,N,d,M,L,act_fn=torch.nn.Sigmoid(),init=torch.nn.init.xavier_normal_,device="cpu"):
         super(spectralNNShallow, self).__init__()
         self.N = N
         self.L = L
         self.act_fn = act_fn
-        self.weight = torch.empty([M,2*L+1,d],dtype=torch.float32,requires_grad=True) #weights of the shallow networks
-        self.bias = torch.zeros([M,2*L+1,1],dtype=torch.float32,requires_grad=True) #biases of the shallow networks
-        self.xi = torch.empty([M,N+2*L],dtype=torch.float32,requires_grad=True) #the multipliers xi_{m,h}
+        self.weight = torch.empty([M,2*L+1,d],dtype=torch.float32,requires_grad=True).to(device) #weights of the shallow networks
+        self.bias = torch.zeros([M,2*L+1,1],dtype=torch.float32,requires_grad=True).to(device) #biases of the shallow networks
+        self.xi = torch.empty([M,N+2*L],dtype=torch.float32,requires_grad=True).to(device) #the multipliers xi_{m,h}
         init(self.weight)
         init(self.xi)
         self.params = list([self.weight, self.xi, self.bias])
@@ -42,20 +42,20 @@ class spectralNNShallow(torch.nn.Module):
 
 ##### Deep spectral-NN #####
 class spectralNNDeep(torch.nn.Module):
-    def __init__(self,N,d,M,L,depth,width,act_fn=torch.nn.Sigmoid(),init=torch.nn.init.xavier_normal_):
+    def __init__(self,N,d,M,L,depth,width,act_fn=torch.nn.Sigmoid(),init=torch.nn.init.xavier_normal_,device="cpu"):
         super(spectralNNDeep, self).__init__()
         self.N = N
         self.L = L
         self.depth = depth
         self.act_fn = act_fn
         self.init = init
-        self.weight0 = torch.empty([M,2*L+1,width,d],dtype=torch.float32,requires_grad=True) #weights for the first hidden layer
-        self.bias0 = torch.zeros([M,2*L+1,width,1],dtype=torch.float32,requires_grad=True) #biases for the first hidden layer
-        self.weight = torch.empty([depth-2,M,2*L+1,width,width],dtype=torch.float32,requires_grad=True) #weights for the other hidden layers
-        self.bias = torch.zeros([depth-2,M,2*L+1,width,1],dtype=torch.float32,requires_grad=True) #biases for the other hidden layer
-        self.weight_final = torch.empty([M,2*L+1,width],dtype=torch.float32,requires_grad=True) #weights for the output layer
-        self.bias_final = torch.zeros([M,2*L+1,1],dtype=torch.float32,requires_grad=True) #biases for the output layer
-        self.xi = torch.empty([M,N+2*L],dtype=torch.float32,requires_grad=True) #the multipliers xi_{m,h}
+        self.weight0 = torch.empty([M,2*L+1,width,d],dtype=torch.float32,requires_grad=True).to(device) #weights for the first hidden layer
+        self.bias0 = torch.zeros([M,2*L+1,width,1],dtype=torch.float32,requires_grad=True).to(device) #biases for the first hidden layer
+        self.weight = torch.empty([depth-2,M,2*L+1,width,width],dtype=torch.float32,requires_grad=True).to(device) #weights for the other hidden layers
+        self.bias = torch.zeros([depth-2,M,2*L+1,width,1],dtype=torch.float32,requires_grad=True).to(device) #biases for the other hidden layer
+        self.weight_final = torch.empty([M,2*L+1,width],dtype=torch.float32,requires_grad=True).to(device) #weights for the output layer
+        self.bias_final = torch.zeros([M,2*L+1,1],dtype=torch.float32,requires_grad=True).to(device) #biases for the output layer
+        self.xi = torch.empty([M,N+2*L],dtype=torch.float32,requires_grad=True).to(device) #the multipliers xi_{m,h}
         init(self.weight0)
         init(self.weight)
         init(self.weight_final)
@@ -79,20 +79,20 @@ class spectralNNDeep(torch.nn.Module):
 ##### Deepshared spectral-NN #####
 class spectralNNDeepshared1(torch.nn.Module):
     ### Deepshared spectral-NN of the first type (weight sharing accross m and h)
-    def __init__(self,N,d,M,L,depth,width,act_fn=torch.nn.Sigmoid(),init=torch.nn.init.xavier_normal_):
+    def __init__(self,N,d,M,L,depth,width,act_fn=torch.nn.Sigmoid(),init=torch.nn.init.xavier_normal_,device="cpu"):
         super(spectralNNDeepshared1, self).__init__()
         self.N = N
         self.L = L
         self.depth = depth
         self.act_fn = act_fn
         self.init = init
-        self.weight0 = torch.empty([width,d],dtype=torch.float32,requires_grad=True) #weights for the first hidden layer
-        self.bias0 = torch.zeros([width,1],dtype=torch.float32,requires_grad=True) #biases for the first hidden layer
-        self.weight = torch.empty([depth-1,width,width],dtype=torch.float32,requires_grad=True) #weights for the other hidden layers
-        self.bias = torch.zeros([depth-1,width,1],dtype=torch.float32,requires_grad=True) #biases for the other hidden layer
-        self.weight_final = torch.empty([M,2*L+1,width],dtype=torch.float32,requires_grad=True) #weights for the output layer
-        self.bias_final = torch.zeros([M,2*L+1,1],dtype=torch.float32,requires_grad=True) #biases for the output layer
-        self.xi = torch.empty([M,N+2*L],dtype=torch.float32,requires_grad=True) #the multipliers xi_{m,h}
+        self.weight0 = torch.empty([width,d],dtype=torch.float32,requires_grad=True).to(device) #weights for the first hidden layer
+        self.bias0 = torch.zeros([width,1],dtype=torch.float32,requires_grad=True).to(device) #biases for the first hidden layer
+        self.weight = torch.empty([depth-1,width,width],dtype=torch.float32,requires_grad=True).to(device) #weights for the other hidden layers
+        self.bias = torch.zeros([depth-1,width,1],dtype=torch.float32,requires_grad=True).to(device) #biases for the other hidden layer
+        self.weight_final = torch.empty([M,2*L+1,width],dtype=torch.float32,requires_grad=True).to(device) #weights for the output layer
+        self.bias_final = torch.zeros([M,2*L+1,1],dtype=torch.float32,requires_grad=True).to(device) #biases for the output layer
+        self.xi = torch.empty([M,N+2*L],dtype=torch.float32,requires_grad=True).to(device) #the multipliers xi_{m,h}
         init(self.weight0)
         init(self.weight)
         init(self.weight_final)
@@ -115,20 +115,20 @@ class spectralNNDeepshared1(torch.nn.Module):
 
 class spectralNNDeepshared2(torch.nn.Module):
     ### Deepshared spectral-NN of the second type (weight sharing accross h for each m)
-    def __init__(self,N,d,M,L,depth,width,act_fn=torch.nn.Sigmoid(),init=torch.nn.init.xavier_normal_):
+    def __init__(self,N,d,M,L,depth,width,act_fn=torch.nn.Sigmoid(),init=torch.nn.init.xavier_normal_,device="cpu"):
         super(spectralNNDeepshared2, self).__init__()
         self.N = N
         self.L = L
         self.depth = depth
         self.act_fn = act_fn
         self.init = init
-        self.weight0 = torch.empty([M,width,d],dtype=torch.float32,requires_grad=True) #weights for the first hidden layer
-        self.bias0 = torch.zeros([M,width,1],dtype=torch.float32,requires_grad=True) #biases for the first hidden layer
-        self.weight = torch.empty([depth-1,M,width,width],dtype=torch.float32,requires_grad=True) #weights for the other hidden layers
-        self.bias = torch.zeros([depth-1,M,width,1],dtype=torch.float32,requires_grad=True) #biases for the other hidden layer
-        self.weight_final = torch.empty([M,2*L+1,width],dtype=torch.float32,requires_grad=True) #weights for the output layer
-        self.bias_final = torch.zeros([M,2*L+1,1],dtype=torch.float32,requires_grad=True) #biases for the output layer
-        self.xi = torch.empty([M,N+2*L],dtype=torch.float32,requires_grad=True) #the multipliers xi_{m,h}
+        self.weight0 = torch.empty([M,width,d],dtype=torch.float32,requires_grad=True).to(device) #weights for the first hidden layer
+        self.bias0 = torch.zeros([M,width,1],dtype=torch.float32,requires_grad=True).to(device) #biases for the first hidden layer
+        self.weight = torch.empty([depth-1,M,width,width],dtype=torch.float32,requires_grad=True).to(device) #weights for the other hidden layers
+        self.bias = torch.zeros([depth-1,M,width,1],dtype=torch.float32,requires_grad=True).to(device) #biases for the other hidden layer
+        self.weight_final = torch.empty([M,2*L+1,width],dtype=torch.float32,requires_grad=True).to(device) #weights for the output layer
+        self.bias_final = torch.zeros([M,2*L+1,1],dtype=torch.float32,requires_grad=True).to(device) #biases for the output layer
+        self.xi = torch.empty([M,N+2*L],dtype=torch.float32,requires_grad=True).to(device) #the multipliers xi_{m,h}
         init(self.weight0)
         init(self.weight)
         init(self.weight_final)
@@ -151,20 +151,20 @@ class spectralNNDeepshared2(torch.nn.Module):
 
 class spectralNNDeepshared3(torch.nn.Module):
     ### Deepshared spectral-NN of the third type (weight sharing accross m for each h)
-    def __init__(self,N,d,M,L,depth,width,act_fn=torch.nn.Sigmoid(),init=torch.nn.init.xavier_normal_):
+    def __init__(self,N,d,M,L,depth,width,act_fn=torch.nn.Sigmoid(),init=torch.nn.init.xavier_normal_,device="cpu"):
         super(spectralNNDeepshared3, self).__init__()
         self.N = N
         self.L = L
         self.depth = depth
         self.act_fn = act_fn
         self.init = init
-        self.weight0 = torch.empty([2*L+1,width,d],dtype=torch.float32,requires_grad=True) #weights for the first hidden layer
-        self.bias0 = torch.zeros([2*L+1,width,1],dtype=torch.float32,requires_grad=True) #biases for the first hidden layer
-        self.weight = torch.empty([depth-1,2*L+1,width,width],dtype=torch.float32,requires_grad=True) #weights for the other hidden layers
-        self.bias = torch.zeros([depth-1,2*L+1,width,1],dtype=torch.float32,requires_grad=True) #biases for the other hidden layer
-        self.weight_final = torch.empty([M,2*L+1,width],dtype=torch.float32,requires_grad=True) #weights for the output layer
-        self.bias_final = torch.zeros([M,2*L+1,1],dtype=torch.float32,requires_grad=True) #biases for the output layer
-        self.xi = torch.empty([M,N+2*L],dtype=torch.float32,requires_grad=True) #the multipliers xi_{m,h}
+        self.weight0 = torch.empty([2*L+1,width,d],dtype=torch.float32,requires_grad=True).to(device) #weights for the first hidden layer
+        self.bias0 = torch.zeros([2*L+1,width,1],dtype=torch.float32,requires_grad=True).to(device) #biases for the first hidden layer
+        self.weight = torch.empty([depth-1,2*L+1,width,width],dtype=torch.float32,requires_grad=True).to(device) #weights for the other hidden layers
+        self.bias = torch.zeros([depth-1,2*L+1,width,1],dtype=torch.float32,requires_grad=True).to(device) #biases for the other hidden layer
+        self.weight_final = torch.empty([M,2*L+1,width],dtype=torch.float32,requires_grad=True).to(device) #weights for the output layer
+        self.bias_final = torch.zeros([M,2*L+1,1],dtype=torch.float32,requires_grad=True).to(device) #biases for the output layer
+        self.xi = torch.empty([M,N+2*L],dtype=torch.float32,requires_grad=True).to(device) #the multipliers xi_{m,h}
         init(self.weight0)
         init(self.weight)
         init(self.weight_final)

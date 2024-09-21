@@ -8,18 +8,15 @@ import time
 import torch
 import numpy as np
 
-device = (
-    "cuda"
-    if torch.cuda.is_available()
-    else "cpu"
-)
+device = ("cuda" if torch.cuda.is_available() else "cpu")
 
-print(f"Using {device} device")
+print(f"Using {device} device \n")
 
 #import matplotlib.pyplot as plt
 
 sys.path.insert(1, os.path.join("C:\\", "Soham", "Git", "spectral-NN", "source_codes"))
 #sys.path.insert(1, os.path.join("C:\\", "Users", "Soham", "Git", "spectral-NN", "source_codes"))
+#sys.path.insert(1, os.path.join("/home", "soham", "GitHub", "spectral-NN", "source_codes"))
 
 import SpectralNetworks as spectNN
 import Important_functions as Ifn
@@ -29,6 +26,7 @@ import Important_functions as Ifn
 
 dirc = "C:\\Soham\\Git\\spectral-NN\\Data\\"
 #dirc = "C:\\Users\\Soham\\Git\\spectral-NN\\Data\\"
+#dirc = "/home/soham/GitHub/spectral-NN/Data/"
 repl = 0
 
 print('Example'+str(repl+1)+':')
@@ -59,7 +57,7 @@ loss = Ifn.loss_spectralNN(N, wt_fn, grid_size=100, q=10)
 epochs = 2000
 
 print("Fitting the shallow model ...")
-model = spectNN.spectralNNShallow(N,d,M,L,act_fn,init).to(device)
+model = spectNN.spectralNNShallow(N,d,M,L,act_fn,init,device)
 optimizer = torch.optim.Adam(model.params,lr=0.01)
 
 start_time = time.time()
@@ -81,7 +79,7 @@ with torch.no_grad():
 
 
 print("Fitting the deep model ...")
-model = spectNN.spectralNNDeep(N,d,M,L,depth,width,act_fn,init).to(device)
+model = spectNN.spectralNNDeep(N,d,M,L,depth,width,act_fn,init,device)
 optimizer = torch.optim.Adam(model.params,lr=0.01)
 
 start_time = time.time()
@@ -103,7 +101,7 @@ with torch.no_grad():
 
 
 print("Fitting the deepshared Type-1 model ...")
-model = spectNN.spectralNNDeepshared1(N,d,M,L,depth,width,act_fn,init).to(device)
+model = spectNN.spectralNNDeepshared1(N,d,M,L,depth,width,act_fn,init,device)
 optimizer = torch.optim.Adam(model.params,lr=0.01)
 
 start_time = time.time()
@@ -126,7 +124,7 @@ with torch.no_grad():
 
 
 print("Fitting the deepshared Type-2 model ...")
-model = spectNN.spectralNNDeepshared2(N,d,M,L,depth,width,act_fn,init).to(device)
+model = spectNN.spectralNNDeepshared2(N,d,M,L,depth,width,act_fn,init,device)
 optimizer = torch.optim.Adam(model.params,lr=0.01)
 
 start_time = time.time()
@@ -148,7 +146,7 @@ with torch.no_grad():
     print("Numerator: {:.4f}, Denominator: {:.4f}" .format(num,den))
 
 print("Fitting the deepshared Type-3 model ...")
-model = spectNN.spectralNNDeepshared3(N,d,M,L,depth,width,act_fn,init).to(device)
+model = spectNN.spectralNNDeepshared3(N,d,M,L,depth,width,act_fn,init,device)
 optimizer = torch.optim.Adam(model.params,lr=0.01)
 
 start_time = time.time()
