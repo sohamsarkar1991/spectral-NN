@@ -14,9 +14,9 @@ print(f"Using {device} device \n")
 
 #import matplotlib.pyplot as plt
 
-sys.path.insert(1, os.path.join("C:\\", "Soham", "Git", "spectral-NN", "source_codes"))
-#sys.path.insert(1, os.path.join("C:\\", "Users", "Soham", "Git", "spectral-NN", "source_codes"))
-#sys.path.insert(1, os.path.join("/home", "soham", "GitHub", "spectral-NN", "source_codes"))
+sys.path.insert(1, os.path.join("C:\\", "Soham", "Git", "spectral-NN", "source_codes_cuda"))
+#sys.path.insert(1, os.path.join("C:\\", "Users", "Soham", "Git", "spectral-NN", "source_codes_cuda"))
+#sys.path.insert(1, os.path.join("/home", "soham", "GitHub", "spectral-NN", "source_codes_cuda"))
 
 import SpectralNetworks as spectNN
 import Important_functions as Ifn
@@ -53,7 +53,7 @@ act_fn=torch.nn.Sigmoid()
 init=torch.nn.init.xavier_normal_
 
 wt_fn = lambda x: np.exp(-x**2)
-loss = Ifn.loss_spectralNN(N, wt_fn, grid_size=100, q=10)
+loss = Ifn.loss_spectralNN(N, wt_fn, grid_size=100, q=10, device=device)
 epochs = 2000
 
 print("Fitting the shallow model ...")
