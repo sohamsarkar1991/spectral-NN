@@ -9,9 +9,9 @@ import torch
 import numpy as np
 
 
-sys.path.insert(1, os.path.join("C:\\", "Soham", "Git", "spectral-NN", "source_codes"))
+#sys.path.insert(1, os.path.join("C:\\", "Soham", "Git", "spectral-NN", "source_codes"))
 #sys.path.insert(1, os.path.join("C:\\", "Users", "Soham", "Git", "spectral-NN", "source_codes"))
-#sys.path.insert(1, os.path.join("/home", "soham", "GitHub", "spectral-NN", "source_codes"))
+sys.path.insert(1, os.path.join("/home", "soham", "GitHub", "spectral-NN", "source_codes"))
 
 import SpectralNetworks as spectNN
 import Important_functions as Ifn
@@ -19,9 +19,9 @@ import Important_functions as Ifn
 
 #import current_setup as setup
 
-dirc = "C:\\Soham\\Git\\spectral-NN\\Data\\"
+#dirc = "C:\\Soham\\Git\\spectral-NN\\Data\\"
 #dirc = "C:\\Users\\Soham\\Git\\spectral-NN\\Data\\"
-#dirc = "/home/soham/GitHub/spectral-NN/Data/"
+dirc = "/home/soham/GitHub/spectral-NN/Data/"
 repl = 0
 
 print('Example'+str(repl+1)+':')
@@ -64,7 +64,7 @@ for epoch in range(epochs):
     optimizer.step()
     l_tr.append(l.item())
 time_ellapsed = time.time() - start_time
-print("Time taken: {} seconds" .format(time_ellapsed))
+print("Time taken: {:.3f} seconds" .format(time_ellapsed))
 
 with torch.no_grad():
     num = loss.loss_fn(x,model(u)).item()
@@ -86,7 +86,7 @@ for epoch in range(epochs):
     optimizer.step()
     l_tr.append(l.item())
 time_ellapsed = time.time() - start_time
-print("Time taken: {} seconds" .format(time_ellapsed))
+print("Time taken: {:.3f} seconds" .format(time_ellapsed))
 
 with torch.no_grad():
     num = loss.loss_fn(x,model(u)).item()
@@ -108,12 +108,11 @@ for epoch in range(epochs):
     optimizer.step()
     l_tr.append(l.item())
 time_ellapsed = time.time() - start_time
-print("Time taken: {} seconds" .format(time_ellapsed))
+print("Time taken: {:.3f} seconds" .format(time_ellapsed))
 
 with torch.no_grad():
     num = loss.loss_fn(x,model(u)).item()
     den = loss.loss_fn(x,0*x).item()
-    #print([num, den])
     print("Relative error: {:.2f}%" .format(num/den*100))
     print("Numerator: {:.4f}, Denominator: {:.4f}" .format(num,den))
 
@@ -131,12 +130,11 @@ for epoch in range(epochs):
     optimizer.step()
     l_tr.append(l.item())
 time_ellapsed = time.time() - start_time
-print("Time taken: {} seconds" .format(time_ellapsed))
+print("Time taken: {:.3f} seconds" .format(time_ellapsed))
 
 with torch.no_grad():
     num = loss.loss_fn(x,model(u)).item()
     den = loss.loss_fn(x,0*x).item()
-    #print([num, den])
     print("Relative error: {:.2f}%" .format(num/den*100))
     print("Numerator: {:.4f}, Denominator: {:.4f}" .format(num,den))
 
@@ -153,11 +151,10 @@ for epoch in range(epochs):
     optimizer.step()
     l_tr.append(l.item())
 time_ellapsed = time.time() - start_time
-print("Time taken: {} seconds" .format(time_ellapsed))
+print("Time taken: {:.3f} seconds" .format(time_ellapsed))
 
 with torch.no_grad():
     num = loss.loss_fn(x,model(u)).item()
     den = loss.loss_fn(x,0*x).item()
-    #print([num, den])
     print("Relative error: {:.2f}%" .format(num/den*100))
     print("Numerator: {:.4f}, Denominator: {:.4f}" .format(num,den))
