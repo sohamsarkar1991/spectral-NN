@@ -83,9 +83,12 @@ class loss_spectralNN:
             x - observed functional time series (NxD matrix)
             x_tilde - fitted time seris using neural networks (NxD matrix)
         """
-        I11 = torch.matmul(x,x.T)
-        I22 = torch.matmul(x_tilde,x_tilde.T)
-        I12 = torch.matmul(x,x_tilde.T)
+        #I11 = torch.matmul(x,x.T)
+        #I22 = torch.matmul(x_tilde,x_tilde.T)
+        #I12 = torch.matmul(x,x_tilde.T)
+        I11 = torch.einsum("ik,jk -> ij", x, x)
+        I22 = torch.einsum("ik,jk -> ij", x_tilde, x_tilde)
+        I12 = torch.einsum("ik,jk -> ij", x, x_tilde)
         A = torch.zeros([2*self.q+1,2*self.q+1],dtype=torch.float32,device=self.device,requires_grad=False)
         for h1 in range(self.q):
             for h2 in range(h1,self.q):
@@ -111,7 +114,8 @@ class loss_spectralNN:
         A = self.inner_part(x, x_tilde)
         l = 0.
         for theta in self.thetas:
-            l += torch.sqrt(torch.matmul(self.w,torch.matmul(torch.cos(theta*self.C_diff)*A,self.w)))/(self.N**2)
+            #l += torch.sqrt(torch.matmul(self.w,torch.matmul(torch.cos(theta*self.C_diff)*A,self.w)))/(self.N)
+            l += torch.sqrt(torch.einsum("i,ij,j ->", self.w,torch.cos(theta*self.C_diff)*A,self.w))/(self.N)
         return l/(2*self.q+1)
 
 ##### Early stopping routine #####
