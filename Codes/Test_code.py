@@ -9,9 +9,9 @@ import torch
 import numpy as np
 
 
-#sys.path.insert(1, os.path.join("C:\\", "Soham", "Git", "spectral-NN", "source_codes"))
+sys.path.insert(1, os.path.join("C:\\", "Soham", "Git", "spectral-NN", "source_codes"))
 #sys.path.insert(1, os.path.join("C:\\", "Users", "Soham", "Git", "spectral-NN", "source_codes"))
-sys.path.insert(1, os.path.join("/home", "soham", "GitHub", "spectral-NN", "source_codes"))
+#sys.path.insert(1, os.path.join("/home", "soham", "GitHub", "spectral-NN", "source_codes"))
 
 import SpectralNetworks as spectNN
 import Important_functions as Ifn
@@ -19,9 +19,9 @@ import Important_functions as Ifn
 
 #import current_setup as setup
 
-#dirc = "C:\\Soham\\Git\\spectral-NN\\Data\\"
+dirc = "C:\\Soham\\Git\\spectral-NN\\Data\\"
 #dirc = "C:\\Users\\Soham\\Git\\spectral-NN\\Data\\"
-dirc = "/home/soham/GitHub/spectral-NN/Data/"
+#dirc = "/home/soham/GitHub/spectral-NN/Data/"
 repl = 0
 
 print('Example'+str(repl+1)+':')
