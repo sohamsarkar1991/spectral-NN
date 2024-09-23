@@ -37,7 +37,7 @@ class loss_spectralNN:
         """
         self.N = N
         self.q = q
-        self.thetas = torch.arange(start=-self.q/(self.q+1),end=self.q/(self.q+1),step=1/(self.q+1),dtype=torch.float32,device=device)*np.pi
+        self.thetas = torch.arange(start=-self.q/(self.q+1),end=self.q/(self.q+1),step=1/(self.q+1),dtype=torch.float32,requires_grad=False,device=device)*np.pi
         hs = np.arange(start=-self.q,stop=self.q+0.5,step=1.,dtype="float32")
         self.C_diff = torch.from_numpy(np.array([[h1-h2 for h2 in hs] for h1 in hs])).to(device)
         self.w = torch.from_numpy(wt_fn(hs/self.q)).to(device)
