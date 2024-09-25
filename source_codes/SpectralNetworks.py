@@ -21,6 +21,7 @@ class spectralNNShallow(torch.nn.Module):
     def __init__(self,N,d,M,L,act_fn=torch.nn.Sigmoid(),init=torch.nn.init.xavier_normal_):
         super(spectralNNShallow, self).__init__()
         self.N = N
+        self.M = M
         self.L = L
         self.act_fn = act_fn
         self.weight = torch.empty([M,2*L+1,d],dtype=torch.float32,requires_grad=True) #weights of the shallow networks
@@ -45,6 +46,7 @@ class spectralNNDeep(torch.nn.Module):
     def __init__(self,N,d,M,L,depth,width,act_fn=torch.nn.Sigmoid(),init=torch.nn.init.xavier_normal_):
         super(spectralNNDeep, self).__init__()
         self.N = N
+        self.M = M
         self.L = L
         self.depth = depth
         self.act_fn = act_fn
@@ -82,6 +84,7 @@ class spectralNNDeepshared1(torch.nn.Module):
     def __init__(self,N,d,M,L,depth,width,act_fn=torch.nn.Sigmoid(),init=torch.nn.init.xavier_normal_):
         super(spectralNNDeepshared1, self).__init__()
         self.N = N
+        self.M = M
         self.L = L
         self.depth = depth
         self.act_fn = act_fn
@@ -118,6 +121,7 @@ class spectralNNDeepshared2(torch.nn.Module):
     def __init__(self,N,d,M,L,depth,width,act_fn=torch.nn.Sigmoid(),init=torch.nn.init.xavier_normal_):
         super(spectralNNDeepshared2, self).__init__()
         self.N = N
+        self.M = M
         self.L = L
         self.depth = depth
         self.act_fn = act_fn
@@ -154,6 +158,7 @@ class spectralNNDeepshared3(torch.nn.Module):
     def __init__(self,N,d,M,L,depth,width,act_fn=torch.nn.Sigmoid(),init=torch.nn.init.xavier_normal_):
         super(spectralNNDeepshared3, self).__init__()
         self.N = N
+        self.M = M
         self.L = L
         self.depth = depth
         self.act_fn = act_fn

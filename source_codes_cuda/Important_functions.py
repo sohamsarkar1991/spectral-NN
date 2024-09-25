@@ -118,6 +118,39 @@ class loss_spectralNN:
             l += torch.sqrt(torch.einsum("i,ij,j ->", self.w,torch.cos(theta*self.C_diff)*A,self.w))/(self.N)
         return l/(2*self.q+1)
 
+
+##### Module for evaluation of estimated spectral density #####
+
+class spectral_density_evaluation:
+    """Module to evaluate the spectral density estimator for a fitted spectral-NN model"""
+    def __init__(self, model, q, wt_fn, device="cpu"):
+        self.N = model.N
+        self.M = model.M
+        self.L = model.L
+        self.q = q
+        self.model = model
+        self.hs = torch.arange(start=-self.q,end=self.q+0.5,step=1.,dtype=torch.float32,device=device,requires_grad=False)
+        self.w = wt_fn(self.hs/self.q)
+
+        self.lam = torch.empty([self.M,self.M,2*self.L+1,2*self.L+1,2*self.q+1],dtype=torch.float32,device=device,requires_grad=False)
+        with torch.no_grad():
+            for h in range(2*self.q+1):
+                N1 = self.N-h
+                for j1 in range(2*self.L+1):
+                    for j2 in range(2*self.L+1):
+                        self.lam[:,:,j1,j2,h] = torch.einsum("ij,kj -> ik", model.xi[:,(j1+h):(j1+h+N1)], model.xi[:,j2:(j2+N1)])/self.N
+
+    def evaluate(self, theta, u, v):
+        with torch.no_grad():
+            #Gu = self.model.first_step(u) # ((g_{m,h}(u))) size M x 2L+1 x D
+            #Gv = self.model.first_step(v) # ((g_{m,h}(v))) size M x 2L+1 x D
+            auv = torch.einsum("ijklm, ikn, jln -> mn", self.lam, self.model.first_step(u), self.model.first_step(v)) # a_h(u,v) size q x D
+            fuv_re = torch.einsum("h,h,hj -> j", self.w, torch.cos(self.hs*theta), auv).reshape(-1,1)
+            fuv_im = torch.einsum("h,h,hj -> j", self.w, torch.sin(self.hs*theta), auv).reshape(-1,1)
+            return torch.cat([fuv_re, fuv_im], dim=1)
+
+
+
 ##### Early stopping routine #####
 class EarlyStopping:
     """Early stops the training if validation loss doesn't improve after a given patience."""
