@@ -51,7 +51,7 @@ wt_fn = lambda x: np.exp(-x**2)
 loss = Ifn.loss_spectralNN(N, wt_fn, grid_size=100, q=10)
 epochs = 2000
 
-print("Fitting the shallow model ...")
+print("\nFitting the shallow model ...")
 model = spectNN.spectralNNShallow(N,d,M,L,act_fn,init)
 optimizer = torch.optim.Adam(model.params,lr=0.01)
 
@@ -72,8 +72,16 @@ with torch.no_grad():
     print("Relative error: {:.2f}%" .format(num/den*100))
     print("Numerator: {:.4f}, Denominator: {:.4f}" .format(num,den))
 
+spect_dens_est = Ifn.spectral_density_evaluation(model, q=10, wt_fn=wt_fn)
+thetas = (2*torch.rand(100)-1)*np.pi
+err_im = 0.
+with torch.no_grad():
+    for theta in thetas:
+        err_im += torch.norm(spect_dens_est.evaluate(theta, u, u)[:,1])**2
+print("Average error in the imaginary part: {:.4f} \n" .format(err_im/100))
 
-print("Fitting the deep model ...")
+
+print("\n Fitting the deep model ...")
 model = spectNN.spectralNNDeep(N,d,M,L,depth,width,act_fn,init)
 optimizer = torch.optim.Adam(model.params,lr=0.01)
 
@@ -94,8 +102,16 @@ with torch.no_grad():
     print("Relative error: {:.2f}%" .format(num/den*100))
     print("Numerator: {:.4f}, Denominator: {:.4f}" .format(num,den))
 
+spect_dens_est = Ifn.spectral_density_evaluation(model, q=10, wt_fn=wt_fn)
+thetas = (2*torch.rand(100)-1)*np.pi
+err_im = 0.
+with torch.no_grad():
+    for theta in thetas:
+        err_im += torch.norm(spect_dens_est.evaluate(theta, u, u)[:,1])**2
+print("Average error in the imaginary part: {:.4f} \n" .format(err_im/100))
 
-print("Fitting the deepshared Type-1 model ...")
+
+print("\n Fitting the deepshared Type-1 model ...")
 model = spectNN.spectralNNDeepshared1(N,d,M,L,depth,width,act_fn,init)
 optimizer = torch.optim.Adam(model.params,lr=0.01)
 
@@ -116,8 +132,16 @@ with torch.no_grad():
     print("Relative error: {:.2f}%" .format(num/den*100))
     print("Numerator: {:.4f}, Denominator: {:.4f}" .format(num,den))
 
+spect_dens_est = Ifn.spectral_density_evaluation(model, q=10, wt_fn=wt_fn)
+thetas = (2*torch.rand(100)-1)*np.pi
+err_im = 0.
+with torch.no_grad():
+    for theta in thetas:
+        err_im += torch.norm(spect_dens_est.evaluate(theta, u, u)[:,1])**2
+print("Average error in the imaginary part: {:.4f} \n" .format(err_im/100))
 
-print("Fitting the deepshared Type-2 model ...")
+
+print("\n Fitting the deepshared Type-2 model ...")
 model = spectNN.spectralNNDeepshared2(N,d,M,L,depth,width,act_fn,init)
 optimizer = torch.optim.Adam(model.params,lr=0.01)
 
@@ -138,7 +162,15 @@ with torch.no_grad():
     print("Relative error: {:.2f}%" .format(num/den*100))
     print("Numerator: {:.4f}, Denominator: {:.4f}" .format(num,den))
 
-print("Fitting the deepshared Type-3 model ...")
+spect_dens_est = Ifn.spectral_density_evaluation(model, q=10, wt_fn=wt_fn)
+thetas = (2*torch.rand(100)-1)*np.pi
+err_im = 0.
+with torch.no_grad():
+    for theta in thetas:
+        err_im += torch.norm(spect_dens_est.evaluate(theta, u, u)[:,1])**2
+print("Average error in the imaginary part: {:.4f} \n" .format(err_im/100))
+
+print("\n Fitting the deepshared Type-3 model ...")
 model = spectNN.spectralNNDeepshared3(N,d,M,L,depth,width,act_fn,init)
 optimizer = torch.optim.Adam(model.params,lr=0.01)
 
@@ -158,3 +190,11 @@ with torch.no_grad():
     den = loss.loss_fn(x,0*x).item()
     print("Relative error: {:.2f}%" .format(num/den*100))
     print("Numerator: {:.4f}, Denominator: {:.4f}" .format(num,den))
+
+spect_dens_est = Ifn.spectral_density_evaluation(model, q=10, wt_fn=wt_fn)
+thetas = (2*torch.rand(100)-1)*np.pi
+err_im = 0.
+with torch.no_grad():
+    for theta in thetas:
+        err_im += torch.norm(spect_dens_est.evaluate(theta, u, u)[:,1])**2
+print("Average error in the imaginary part: {:.4f} \n" .format(err_im/100))
