@@ -81,7 +81,7 @@ with torch.no_grad():
 print("Average error in the imaginary part: {:.4f} \n" .format(err_im/100))
 
 
-print("\n Fitting the deep model ...")
+print("\nFitting the deep model ...")
 model = spectNN.spectralNNDeep(N,d,M,L,depth,width,act_fn,init)
 optimizer = torch.optim.Adam(model.params,lr=0.01)
 
@@ -111,7 +111,7 @@ with torch.no_grad():
 print("Average error in the imaginary part: {:.4f} \n" .format(err_im/100))
 
 
-print("\n Fitting the deepshared Type-1 model ...")
+print("\nFitting the deepshared Type-1 model ...")
 model = spectNN.spectralNNDeepshared1(N,d,M,L,depth,width,act_fn,init)
 optimizer = torch.optim.Adam(model.params,lr=0.01)
 
@@ -141,7 +141,7 @@ with torch.no_grad():
 print("Average error in the imaginary part: {:.4f} \n" .format(err_im/100))
 
 
-print("\n Fitting the deepshared Type-2 model ...")
+print("\nFitting the deepshared Type-2 model ...")
 model = spectNN.spectralNNDeepshared2(N,d,M,L,depth,width,act_fn,init)
 optimizer = torch.optim.Adam(model.params,lr=0.01)
 
@@ -170,7 +170,7 @@ with torch.no_grad():
         err_im += torch.norm(spect_dens_est.evaluate(theta, u, u)[:,1])**2
 print("Average error in the imaginary part: {:.4f} \n" .format(err_im/100))
 
-print("\n Fitting the deepshared Type-3 model ...")
+print("\nFitting the deepshared Type-3 model ...")
 model = spectNN.spectralNNDeepshared3(N,d,M,L,depth,width,act_fn,init)
 optimizer = torch.optim.Adam(model.params,lr=0.01)
 
