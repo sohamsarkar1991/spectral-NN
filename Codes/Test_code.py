@@ -74,11 +74,15 @@ with torch.no_grad():
 
 spect_dens_est = Ifn.spectral_density_evaluation(model, q=10, wt_fn=wt_fn)
 thetas = (2*torch.rand(100)-1)*np.pi
+err_re = 0.
 err_im = 0.
 with torch.no_grad():
     for theta in thetas:
-        err_im += torch.norm(spect_dens_est.evaluate(theta, u, u)[:,1])**2
-print("Average error in the imaginary part: {:.4f} \n" .format(err_im/100))
+        f_hat = spect_dens_est.evaluate(theta, u, u)
+        err_re += torch.norm(f_hat[:,0])**2
+        err_im += torch.norm(f_hat[:,1])**2
+        del f_hat
+print("Average errors: Real part - {:.4f}, Imaginary part - {:.4f}\n" .format(err_re/100,err_im/100))
 
 
 print("\nFitting the deep model ...")
@@ -104,11 +108,15 @@ with torch.no_grad():
 
 spect_dens_est = Ifn.spectral_density_evaluation(model, q=10, wt_fn=wt_fn)
 thetas = (2*torch.rand(100)-1)*np.pi
+err_re = 0.
 err_im = 0.
 with torch.no_grad():
     for theta in thetas:
-        err_im += torch.norm(spect_dens_est.evaluate(theta, u, u)[:,1])**2
-print("Average error in the imaginary part: {:.4f} \n" .format(err_im/100))
+        f_hat = spect_dens_est.evaluate(theta, u, u)
+        err_re += torch.norm(f_hat[:,0])**2
+        err_im += torch.norm(f_hat[:,1])**2
+        del f_hat
+print("Average errors: Real part - {:.4f}, Imaginary part - {:.4f}\n" .format(err_re/100,err_im/100))
 
 
 print("\nFitting the deepshared Type-1 model ...")
@@ -134,11 +142,15 @@ with torch.no_grad():
 
 spect_dens_est = Ifn.spectral_density_evaluation(model, q=10, wt_fn=wt_fn)
 thetas = (2*torch.rand(100)-1)*np.pi
+err_re = 0.
 err_im = 0.
 with torch.no_grad():
     for theta in thetas:
-        err_im += torch.norm(spect_dens_est.evaluate(theta, u, u)[:,1])**2
-print("Average error in the imaginary part: {:.4f} \n" .format(err_im/100))
+        f_hat = spect_dens_est.evaluate(theta, u, u)
+        err_re += torch.norm(f_hat[:,0])**2
+        err_im += torch.norm(f_hat[:,1])**2
+        del f_hat
+print("Average errors: Real part - {:.4f}, Imaginary part - {:.4f}\n" .format(err_re/100,err_im/100))
 
 
 print("\nFitting the deepshared Type-2 model ...")
@@ -164,11 +176,16 @@ with torch.no_grad():
 
 spect_dens_est = Ifn.spectral_density_evaluation(model, q=10, wt_fn=wt_fn)
 thetas = (2*torch.rand(100)-1)*np.pi
+err_re = 0.
 err_im = 0.
 with torch.no_grad():
     for theta in thetas:
-        err_im += torch.norm(spect_dens_est.evaluate(theta, u, u)[:,1])**2
-print("Average error in the imaginary part: {:.4f} \n" .format(err_im/100))
+        f_hat = spect_dens_est.evaluate(theta, u, u)
+        err_re += torch.norm(f_hat[:,0])**2
+        err_im += torch.norm(f_hat[:,1])**2
+        del f_hat
+print("Average errors: Real part - {:.4f}, Imaginary part - {:.4f}\n" .format(err_re/100,err_im/100))
+
 
 print("\nFitting the deepshared Type-3 model ...")
 model = spectNN.spectralNNDeepshared3(N,d,M,L,depth,width,act_fn,init)
@@ -193,8 +210,12 @@ with torch.no_grad():
 
 spect_dens_est = Ifn.spectral_density_evaluation(model, q=10, wt_fn=wt_fn)
 thetas = (2*torch.rand(100)-1)*np.pi
+err_re = 0.
 err_im = 0.
 with torch.no_grad():
     for theta in thetas:
-        err_im += torch.norm(spect_dens_est.evaluate(theta, u, u)[:,1])**2
-print("Average error in the imaginary part: {:.4f} \n" .format(err_im/100))
+        f_hat = spect_dens_est.evaluate(theta, u, u)
+        err_re += torch.norm(f_hat[:,0])**2
+        err_im += torch.norm(f_hat[:,1])**2
+        del f_hat
+print("Average errors: Real part - {:.4f}, Imaginary part - {:.4f}\n" .format(err_re/100,err_im/100))
