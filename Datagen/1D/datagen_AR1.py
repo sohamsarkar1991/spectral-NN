@@ -255,7 +255,7 @@ def true_spectrum_AR1_simple(K,M,d,replicates=1,method=None,rot=None,gam=0.5,fol
             f_loc = open(loc_file,"a")
             np.savetxt(f_loc, np.hstack((u,v)), fmt="%.10f")
             f_loc.close()
-            c_z = cross_cov(u,v,method,rot)
+            c_z = cross_cov(u,v,method,rot).reshape(-1,1)
             mult = 1./(1. + gam**2 - 2*gam*np.cos(theta))
             f_spect = open(spect_file,"a")
             np.savetxt(f_spect, np.hstack((mult*c_z,0*c_z)), fmt="%.10f")
