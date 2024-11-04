@@ -6,7 +6,7 @@
 ############ To be used in the case of d=1 only #############
 #############################################################
 
-
+import os
 import numpy as np
 from scipy import special
 import itertools
@@ -173,16 +173,17 @@ def sqrt_mat(C):
     return [lam,E]
 
 
-def datagen_AR1_simple(N,K,d,replicates=1,method=None,rot=None,gam=0.5,N0=100):
+def datagen_AR1_simple(N,gr_size,d,replicates=1,method=None,rot=None,gam=0.5,N0=100,folder=""):
     """
-    Data generation from superpositions of separable processes.
+    Data generation from an auto-regressive functional time series.
     INPUT:
         N - number of observations to be generated
-        K - grid size in 1D
+        gr_size - grid size in 1D
         d - dimension
         replicates - number of replications
-        method - process for each separable component
-        rot - rotation matrix, to be applied
+        method - covariance of the innovation process
+        rot - rotation matrix to be applied
+        gam - coefficient of the autoregression model
         N0 - burn-in sample: number of samples to be discarded for stationarity
     OUTPUT:
         Generates a simple AR(1) process X_t = gam * X_{t-1} + Z_t on a regular grid.
@@ -192,17 +193,17 @@ def datagen_AR1_simple(N,K,d,replicates=1,method=None,rot=None,gam=0.5,N0=100):
     """
     ##### For the innovation Z #####
     ##### Z and X_0 have the same distribution
-    filename = 'locations.dat'
-    print_locations(K,d,filename)
+    print("Data generation started ...")
+    filename = os.path.join(folder,"locations.dat")
+    print_locations(gr_size,d,filename)
         
     print('Basis generation started')
-    lam, E = sqrt_mat(cov_mat(K,d,method,rot))
+    lam, E = sqrt_mat(cov_mat(gr_size,d,method,rot))
     print('Basis generated')
     
     for repl in range(replicates):
-        #np.random.seed(int(np.random.rand()*(2**32-1)))
         print('Replicate '+str(repl+1))
-        filename = 'Example'+str(repl+1)+'.dat'
+        filename = os.path.join(folder,"Example"+str(repl+1)+".dat")
         f=open(filename,'w')
         f.close()
         x0 = np.random.normal(loc=0.,scale=1,size=len(lam))
@@ -218,4 +219,46 @@ def datagen_AR1_simple(N,K,d,replicates=1,method=None,rot=None,gam=0.5,N0=100):
             x0 = gam*x0 + z
             np.savetxt(f,x0,fmt='%.10f')
         f.close()
+    print("Data generation complete.")
 
+def true_spectrum_AR1_simple(K,M,d,replicates=1,method=None,rot=None,gam=0.5,folder=""):
+    """
+    True spectrum of an autoregressive functional time series.
+    INPUT:
+        K - number of angles (theta)
+        M - number of locations per angle
+        d - dimension
+        replicates - number of replications
+        method - covariance of the innovation process
+        rot - rotation matrix to be applied
+        gam - coefficient of the autoregression model
+    OUTPUT:
+        Evaluates the spectrum of the model and writes
+        them on "True_spectrumi.dat", for i=1,...,replicates.
+        The angles are written on "True_thetasi.dat"
+        and the locations are written on "True_locationsi.dat".
+    """
+    print("Writing true specturm ...")
+    for repl in range(replicates):
+        print("Replicate "+str(repl+1))
+        thetas = np.random.uniform(low=-np.pi,high=np.pi,size=K)
+        np.savetxt(os.path.join(folder,"True_thetas"+str(repl+1)+".dat"), thetas, fmt="%.10f")
+        loc_file = os.path.join(folder,"True_locations"+str(repl+1)+".dat")
+        spect_file = os.path.join(folder,"True_spectrum"+str(repl+1)+".dat")
+        f_loc = open(loc_file,"w")
+        f_spect = open(spect_file,"w")
+        f_loc.close()
+        f_spect.close()
+        for theta in thetas:
+            u = locations_unif(M,d)
+            v = locations_unif(M,d)
+            f_loc = open(loc_file,"a")
+            np.savetxt(f_loc, np.hstack((u,v)), fmt="%.10f")
+            f_loc.close()
+            c_z = cross_cov(u,v,method,rot)
+            mult = 1./(1. + gam**2 - 2*gam*np.cos(theta))
+            f_spect = open(spect_file,"a")
+            np.savetxt(f_spect, np.hstack((mult*c_z,0*c_z)), fmt="%.10f")
+            f_spect.close()
+            del u,v,c_z,mult
+    print("True spectrum writing complete.")
