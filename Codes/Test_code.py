@@ -47,9 +47,11 @@ M, L, depth, width = 10, 10, 3, 20
 act_fn=torch.nn.Sigmoid()
 init=torch.nn.init.xavier_normal_
 
-wt_fn = lambda x: np.exp(-x**2)
+#wt_fn = Ifn.kern_truncated
+#wt_fn = Ifn.kern_bartlett
+wt_fn = Ifn.kern_parzen
 loss = Ifn.loss_spectralNN(N, wt_fn, grid_size=100, q=10)
-epochs = 2000
+epochs = 10000
 
 print("\nFitting the shallow model ...")
 model = spectNN.spectralNNShallow(N,d,M,L,act_fn,init)

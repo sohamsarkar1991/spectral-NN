@@ -22,6 +22,40 @@ def batch_CV(D,batch_size=10): # points randomly shuffled each time, iterated th
             fold += 1
         yield np.sort(indices[fold*batch_size:])
 
+##### Kernel functions for covariance estimation #####
+
+def truncated(s):
+    if np.abs(s) <= 1.:
+        return 1.
+    else:
+        return 0.
+
+def bartlett(s):
+    t = np.abs(s)
+    if t <= 1.:
+        return 1-t
+    else:
+        return 0.
+
+def parzen(s):
+    t = np.abs(s)
+    if t < 0.5:
+        return 1 - 6*(t**2) + 6*(t**3)
+    elif t <= 1.:
+        return 2*((1-t)**3)
+    else:
+        return 0.
+
+##### vectorization #####
+def kern_truncated(hs):
+    return np.array(list(map(truncated,hs))).astype("float32")
+
+def kern_bartlett(hs):
+    return np.array(list(map(bartlett,hs))).astype("float32")
+
+def kern_parzen(hs):
+    return np.array(list(map(parzen,hs))).astype("float32")
+
 ##### Loss module #####
 class loss_spectralNN:
     """Module to compute the loss function associated with the spectral NN estimator"""
@@ -128,8 +162,9 @@ class spectral_density_evaluation:
         self.L = model.L
         self.q = q
         self.model = model
-        self.hs = torch.arange(start=-self.q,end=self.q+0.5,step=1.,dtype=torch.float32,requires_grad=False)
-        self.w = wt_fn(self.hs/self.q)
+        hs = np.arange(start=-self.q,stop=self.q+0.5,step=1.,dtype="float32")
+        self.w = torch.from_numpy(wt_fn(hs/self.q))
+        self.hs = torch.from_numpy(hs)
 
         self.lam = torch.empty([self.M,self.M,2*self.L+1,2*self.L+1,2*self.q+1],dtype=torch.float32,requires_grad=False)
         with torch.no_grad():
