@@ -327,3 +327,51 @@ def cnet_optim_best(x,u,model,loss_fn,optimizer,split,epochs=1000,burn_in=500,in
     best_state.load_checkpoint(model)
     epoch = best_state.epoch
     return l_tr, l_va, epoch+1
+
+
+##### Error computation #####
+def spectral_error_computation(spect_est,theta_file="True_thetas.dat",loc_file="True_locations.dat",spect_file="True_spectrum.dat"):
+    tr_thetas = np.loadtxt(theta_file,dtype="float32")
+    tr_loc = np.loadtxt(loc_file,dtype='float32')
+    spect_tr = np.loadtxt(spect_file,dtype="float32")
+    K = len(tr_thetas)
+    D_star = int(tr_loc.shape[0]/K)
+    d = int(tr_loc.shape[1]/2)
+    if int(spect_tr.shape[0]/K) != D_star:
+        exit('Shape mismatch!! Aborting..')
+    tr_thetas = torch.from_numpy(tr_thetas)
+    tr_loc = torch.from_numpy(tr_loc)
+    spect_tr = torch.from_numpy(spect_tr)
+
+    tr_re = 0.
+    tr_im = 0.
+    err_re = 0.
+    err_im = 0.
+    den = 0.
+    num = 0.
+    with torch.no_grad():
+        for i,theta in enumerate(tr_thetas):
+            u_tr = tr_loc[i*D_star:(i+1)*D_star,:d]
+            v_tr = tr_loc[i*D_star:(i+1)*D_star,d:]
+            f_hat = spect_est.evaluate(theta,u_tr,v_tr)
+            f_tr = spect_tr[i*D_star:(i+1)*D_star,:]
+            num_re = torch.norm(f_tr[:,0]-f_hat[:,0]).item()
+            den_re = torch.norm(f_tr[:,0]).item()
+            num_im = torch.norm(f_tr[:,1]-f_hat[:,1]).item()
+            den_im = torch.norm(f_tr[:,1]).item()
+            tr_re += den_re
+            tr_im += den_im
+            err_re += num_re
+            err_im += num_im
+            num += np.sqrt(num_re**2 + num_im**2)
+            den += np.sqrt(den_re**2 + den_im**2)
+
+    tr_re = tr_re/(K*np.sqrt(D_star))
+    tr_im = tr_im/(K*np.sqrt(D_star))
+    err_re = err_re/(K*np.sqrt(D_star))
+    err_im = err_im/(K*np.sqrt(D_star))
+    num = num/(K*np.sqrt(D_star))
+    den = den/(K*np.sqrt(D_star))
+    test_err = num/den
+
+    return [test_err,num,den,tr_re,tr_im,err_re,err_im]

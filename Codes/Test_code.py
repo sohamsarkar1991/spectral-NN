@@ -25,7 +25,6 @@ dirc = "C:\\Soham\\Git\\spectral-NN\\Data\\"
 repl = 0
 
 print('Example'+str(repl+1)+':')
-file = dirc+'locations'+str(repl+1)+'.dat'
 u = np.loadtxt(dirc+"locations.dat",dtype="float32")
 if len(u.shape)==1:
     D, d = len(u), 1
