@@ -276,6 +276,17 @@ class BestState:
 
 ##### Optimization routine #####
 
+def spect_NN_optimizer(x,u,model,loss,optimizer,epochs=1000):
+    #l_tr = []
+    for epoch in range(epochs):
+        l = loss.loss_fn(x,model(u))
+        optimizer.zero_grad()
+        l.backward()
+        optimizer.step()
+        #l_tr.append(l.item())
+    #return l_tr
+    return 0.
+
 """ Need to modify """
 def cnet_optim_best(x,u,model,loss_fn,optimizer,split,epochs=1000,burn_in=500,interval=1,checkpoint_file='Checkpoint.pt'):
     """
