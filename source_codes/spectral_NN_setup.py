@@ -18,5 +18,5 @@ wt_fn = Ifn.kern_truncated # weight function
 loss_grid = 100
 optimizer = torch.optim.Adam
 lr = 0.01
-epochs = 10 # number of epochs
-replicates = range(4)
+epochs = 1000 # number of epochs
+replicates = range(25)
