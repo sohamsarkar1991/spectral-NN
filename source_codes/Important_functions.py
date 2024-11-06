@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-##### Important functions for fitting the CovNet model #####
+##### Important functions for fitting the spectral-NN model #####
 
 
 import torch
