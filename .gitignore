@@ -1,4 +1,5 @@
-Data
-Results
+# The following are not tracked
+Data/
+Results/
 .ipynb_checkpoints
 __pycache__
