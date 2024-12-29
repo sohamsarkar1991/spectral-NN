@@ -226,7 +226,7 @@ def true_spectrum_AR1_simple(K,M,d,replicates=1,method=None,rot=None,gam=0.5,fol
     True spectrum of an autoregressive functional time series.
     INPUT:
         K - number of angles (theta)
-        M - number of locations per angle
+        M - number of locations per angle/number of grid points
         d - dimension
         replicates - number of replications
         method - covariance of the innovation process
@@ -246,8 +246,8 @@ def true_spectrum_AR1_simple(K,M,d,replicates=1,method=None,rot=None,gam=0.5,fol
         loc_file = os.path.join(folder,"True_locations"+str(repl+1)+".dat")
         spect_file = os.path.join(folder,"True_spectrum"+str(repl+1)+".dat")
         f_loc = open(loc_file,"w")
-        f_spect = open(spect_file,"w")
         f_loc.close()
+        f_spect = open(spect_file,"w")
         f_spect.close()
         for theta in thetas:
             u = locations_unif(M,d)
@@ -261,4 +261,36 @@ def true_spectrum_AR1_simple(K,M,d,replicates=1,method=None,rot=None,gam=0.5,fol
             np.savetxt(f_spect, np.hstack((mult*c_z,0*c_z)), fmt="%.10f")
             f_spect.close()
             del u,v,c_z,mult
+    print("True spectrum writing complete.")
+
+def true_spectrum_grid_AR1_simple(K,M,d,method=None,rot=None,gam=0.5,folder=""):
+    """
+    True spectrum of an autoregressive functional time series.
+    INPUT:
+        K - number of angles (theta)
+        M - number of locations per angle/number of grid points
+        d - dimension
+        method - covariance of the innovation process
+        rot - rotation matrix to be applied
+        gam - coefficient of the autoregression model
+    OUTPUT:
+        Evaluates the spectrum of the model and writes
+        them on "True_spectrum_grid.dat".
+        The angles are written on "True_thetas_grid.dat"
+        and the locations are written on "True_locations_grid.dat".
+    """
+    print("Writing true specturm ...")
+    thetas = np.arange(start=-K,stop=K+0.5,step=1,dtype="float32")/K*np.pi
+    np.savetxt(os.path.join(folder,"True_thetas_grid.dat"), thetas, fmt="%.10f")
+    print_locations(M,d, file=os.path.join(folder,"True_locations_grid.dat"))
+    spect_file = os.path.join(folder,"True_spectrum_grid.dat")
+    f_spect = open(spect_file,"w")
+    f_spect.close()
+    c_z = cov_mat(M,d,method,rot)
+    for theta in thetas:
+        mult = 1./(1. + gam**2 - 2*gam*np.cos(theta))
+        f_spect = open(spect_file,"a")
+        np.savetxt(f_spect, np.hstack((mult*c_z,0.*c_z)), fmt="%.10f")
+        f_spect.close()
+    del c_z
     print("True spectrum writing complete.")

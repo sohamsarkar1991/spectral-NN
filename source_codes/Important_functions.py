@@ -71,7 +71,9 @@ class loss_spectralNN:
         """
         self.N = N
         self.q = q
-        self.thetas = torch.arange(start=-self.q/(self.q+1),end=self.q/(self.q+1),step=1/(self.q+1),dtype=torch.float32,requires_grad=False)*np.pi
+        self.gr = int(grid_size/2)
+        self.thetas = torch.arange(start=-self.gr,end=self.gr+0.5,step=1.,dtype=torch.float32,requires_grad=False)/(self.gr+1)*np.pi
+        #self.thetas = torch.empty(2*self.gr+1,dtype=torch.float32,requires_grad=False)
         hs = np.arange(start=-self.q,stop=self.q+0.5,step=1.,dtype="float32")
         self.C_diff = torch.from_numpy(np.array([[h1-h2 for h2 in hs] for h1 in hs]))
         self.w = torch.from_numpy(wt_fn(hs/self.q))
@@ -117,9 +119,6 @@ class loss_spectralNN:
             x - observed functional time series (NxD matrix)
             x_tilde - fitted time seris using neural networks (NxD matrix)
         """
-        #I11 = torch.matmul(x,x.T)
-        #I22 = torch.matmul(x_tilde,x_tilde.T)
-        #I12 = torch.matmul(x,x_tilde.T)
         I11 = torch.einsum("ik,jk -> ij", x, x)
         I22 = torch.einsum("ik,jk -> ij", x_tilde, x_tilde)
         I12 = torch.einsum("ik,jk -> ij", x, x_tilde)
@@ -134,25 +133,41 @@ class loss_spectralNN:
                 A[self.q-h2,self.q-h1] = A[self.q+h1,self.q+h2]
                 A[self.q-h2,self.q+h1] = A[self.q+h1,self.q+h2]
                 A[self.q+h2,self.q-h1] = A[self.q+h1,self.q+h2]
-
-        #for h1 in range(self.q):
-        #    for h2 in range(self.q):
-        #        A[self.q+h1,self.q+h2] = self.inner_sum(I11,I22,I12,h1,h2)
-        #        A[self.q-h1,self.q-h2] = A[self.q+h1,self.q+h2]
-        #        A[self.q-h1,self.q+h2] = A[self.q+h1,self.q+h2]
-        #        A[self.q+h1,self.q-h2] = A[self.q+h1,self.q+h2]
         
-        return A
+        return A/(self.N**2)
 
     def loss_fn(self, x, x_tilde):
         A = self.inner_part(x, x_tilde)
         l = 0.
+        self.thetas = np.random.uniform(low=-np.pi,high=np.pi,size=2*self.gr+1)
         for theta in self.thetas:
-            #l += torch.sqrt(torch.matmul(self.w,torch.matmul(torch.cos(theta*self.C_diff)*A,self.w)))/(self.N)
-            l += torch.sqrt(torch.einsum("i,ij,j ->", self.w,torch.cos(theta*self.C_diff)*A,self.w))/(self.N)
-        return l/(2*self.q+1)
+            l += torch.sqrt(torch.einsum("i,ij,j ->", self.w,torch.cos(theta*self.C_diff)*A,self.w))/(2*np.pi)
+        return l
 
 ##### Module for evaluation of estimated spectral density #####
+
+class empirical_spectral_density:
+    """Module to evaluate the empirical spectral density"""
+    def __init__(self, x, q, wt_fn):
+        N, D = x.shape
+        self.lagged_covariance = torch.zeros([2*q+1,D,D],dtype=torch.float32,requires_grad=False)
+        for i in range(N):
+            self.lagged_covariance[q,:,:] += torch.einsum("i,j -> ij", x[i,:], x[i,:])
+        for h in range(1,q+1):
+            for i in range(N-h):
+                self.lagged_covariance[h,:,:] += torch.einsum("i,j -> ij", x[i,:], x[i+h,:])
+            self.lagged_covariance[h+q,:,:] = self.lagged_covariance[h,:,:]
+        self.lagged_covariance = self.lagged_covariance/N
+        
+        self.hs = np.arange(start=-q,stop=q+0.5,step=1.,dtype="float32")
+        self.w = torch.from_numpy(setup.wt_fn(hs/q))
+        self.hs = torch.from_numpy(hs)
+
+    def evaluate(self, theta):
+        co_spect = torch.einsum("h,h,hij -> ij", self.w, torch.cos(self.hs*theta), self.lagged_covariance)/(2*np.pi)
+        quad_spect = torch.einsum("h,h,hij -> ij", self.w, torch.sin(self.hs*theta), self.lagged_covariance)/(2*np.pi)
+        return list([co_spect, quad_spect])
+
 
 class spectral_density_evaluation:
     """Module to evaluate the spectral density estimator for a fitted spectral-NN model"""
@@ -178,10 +193,19 @@ class spectral_density_evaluation:
         with torch.no_grad():
             #Gu = self.model.first_step(u) # ((g_{m,h}(u))) size M x 2L+1 x D
             #Gv = self.model.first_step(v) # ((g_{m,h}(v))) size M x 2L+1 x D
-            auv = torch.einsum("ijklm, ikn, jln -> mn", self.lam, self.model.first_step(u), self.model.first_step(v)) # a_h(u,v) size q x D
-            fuv_re = torch.einsum("h,h,hj -> j", self.w, torch.cos(self.hs*theta), auv).reshape(-1,1)
-            fuv_im = torch.einsum("h,h,hj -> j", self.w, torch.sin(self.hs*theta), auv).reshape(-1,1)
-            return torch.cat([fuv_re, fuv_im], dim=1)
+            ah_uv = torch.einsum("ijklm, ikn, jln -> mn", self.lam, self.model.first_step(u), self.model.first_step(v)) # a_h(u,v) size 2q+1 x D
+            co_spect = (torch.einsum("h,h,hj -> j", self.w, torch.cos(self.hs*theta), ah_uv)/(2*np.pi)).reshape(-1,1)
+            quad_spect = (torch.einsum("h,h,hj -> j", self.w, torch.sin(self.hs*theta), ah_uv)/(2*np.pi)).reshape(-1,1)
+            return torch.cat([co_spect, quad_spect], dim=1)
+
+    def evaluate_grid(self, theta, u):
+        """ evaluation of fitted spectral density on a dense grid """
+        with torch.no_grad():
+            Gu = self.model.first_step(u) # ((g_{m,h}(u))) size M x 2L+1 x D
+            ah_u = torch.einsum("ijklm, ikp, jlq -> mpq", self.lam, Gu, Gu) #a_h(u) size 2q+1 x D x D
+            co_spect = (torch.einsum("h,h,hij -> ij", self.w, torch.cos(self.hs*theta), ah_u))/(2*np.pi)
+            quad_spect = (torch.einsum("h,h,hij -> ij", self.w, torch.sin(self.hs*theta), ah_u))/(2*np.pi)
+            return list([co_spect, quad_spect])
 
 
 ##### Early stopping routine #####
@@ -288,7 +312,7 @@ def spect_NN_optimizer(x,u,model,loss,optimizer,epochs=1000):
     return 0.
 
 """ Need to modify """
-def cnet_optim_best(x,u,model,loss_fn,optimizer,split,epochs=1000,burn_in=500,interval=1,checkpoint_file='Checkpoint.pt'):
+def spect_NN_optim_best(x,u,model,loss_fn,optimizer,split,epochs=1000,burn_in=500,interval=1,checkpoint_file='Checkpoint.pt'):
     """
     Optimization routine with on-the-go error computation. Returns the model state that produced the best error.
     INPUTS - x, u - data and locations
@@ -366,23 +390,23 @@ def spectral_error_computation(spect_est,theta_file="True_thetas.dat",loc_file="
             v_tr = tr_loc[i*D_star:(i+1)*D_star,d:]
             f_hat = spect_est.evaluate(theta,u_tr,v_tr)
             f_tr = spect_tr[i*D_star:(i+1)*D_star,:]
-            num_re = torch.norm(f_tr[:,0]-f_hat[:,0]).item()
-            den_re = torch.norm(f_tr[:,0]).item()
-            num_im = torch.norm(f_tr[:,1]-f_hat[:,1]).item()
-            den_im = torch.norm(f_tr[:,1]).item()
-            tr_re += den_re
-            tr_im += den_im
-            err_re += num_re
-            err_im += num_im
-            num += np.sqrt(num_re**2 + num_im**2)
-            den += np.sqrt(den_re**2 + den_im**2)
+            num_cospect = torch.norm(f_tr[:,0]-f_hat[:,0]).item()
+            den_cospect = torch.norm(f_tr[:,0]).item()
+            num_quadspect = torch.norm(f_tr[:,1]-f_hat[:,1]).item()
+            den_quadspect = torch.norm(f_tr[:,1]).item()
+            tr_cospect += den_cospect
+            tr_quadspect += den_quadspect
+            err_cospect += num_cospect
+            err_quadspect += num_quadspect
+            num += np.sqrt(num_cospect**2 + num_quadspect**2)
+            den += np.sqrt(den_cospect**2 + den_quadspect**2)
 
-    tr_re = tr_re/(K*np.sqrt(D_star))
-    tr_im = tr_im/(K*np.sqrt(D_star))
-    err_re = err_re/(K*np.sqrt(D_star))
-    err_im = err_im/(K*np.sqrt(D_star))
+    tr_cospect = tr_cospect/(K*np.sqrt(D_star))
+    tr_quadspect = tr_quadspect/(K*np.sqrt(D_star))
+    err_cospect = err_cospect/(K*np.sqrt(D_star))
+    err_quadspect = err_quadspect/(K*np.sqrt(D_star))
     num = num/(K*np.sqrt(D_star))
     den = den/(K*np.sqrt(D_star))
     test_err = num/den
 
-    return [test_err,num,den,tr_re,tr_im,err_re,err_im]
+    return [test_err,num,den,tr_cospect,tr_quadspect,err_cospect,err_quadspect]
