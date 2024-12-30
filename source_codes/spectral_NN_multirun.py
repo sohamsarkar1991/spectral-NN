@@ -4,8 +4,8 @@ def spectral_NN_multirun(method,M,L,depth,width,q):
     import time
     import torch
     import numpy as np
-    sys.path.insert(1, os.path.join("C:\\", "Soham", "Git", "spectral-NN", "source_codes"))
-    #sys.path.insert(1, os.path.join("C:\\", "Users", "Soham", "Git", "spectral-NN", "source_codes"))
+    #sys.path.insert(1, os.path.join("C:\\", "Soham", "Git", "spectral-NN", "source_codes"))
+    sys.path.insert(1, os.path.join("C:\\", "Users", "Soham", "Git", "spectral-NN", "source_codes"))
     #sys.path.insert(1, os.path.join("/home", "soham", "GitHub", "spectral-NN", "source_codes"))
 
     import SpectralNetworks as spectNN

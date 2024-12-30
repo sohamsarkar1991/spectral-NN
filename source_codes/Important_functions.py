@@ -160,8 +160,8 @@ class empirical_spectral_density:
         self.lagged_covariance = self.lagged_covariance/N
         
         self.hs = np.arange(start=-q,stop=q+0.5,step=1.,dtype="float32")
-        self.w = torch.from_numpy(setup.wt_fn(hs/q))
-        self.hs = torch.from_numpy(hs)
+        self.w = torch.from_numpy(wt_fn(self.hs/q))
+        self.hs = torch.from_numpy(self.hs)
 
     def evaluate(self, theta):
         co_spect = torch.einsum("h,h,hij -> ij", self.w, torch.cos(self.hs*theta), self.lagged_covariance)/(2*np.pi)

@@ -1,5 +1,6 @@
 # The following are not tracked
-Data/
-Results/
+Data
+Results
+Plots
 .ipynb_checkpoints
 __pycache__
