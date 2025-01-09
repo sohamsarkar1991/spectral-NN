@@ -257,6 +257,7 @@ def true_spectrum_AR1_simple(K,M,d,replicates=1,method=None,rot=None,gam=0.5,fol
             f_loc.close()
             c_z = cross_cov(u,v,method,rot).reshape(-1,1)
             mult = 1./(1. + gam**2 - 2*gam*np.cos(theta))
+            mult = mult/(2*np.pi)
             f_spect = open(spect_file,"a")
             np.savetxt(f_spect, np.hstack((mult*c_z,0*c_z)), fmt="%.10f")
             f_spect.close()
@@ -289,6 +290,7 @@ def true_spectrum_grid_AR1_simple(K,M,d,method=None,rot=None,gam=0.5,folder=""):
     c_z = cov_mat(M,d,method,rot)
     for theta in thetas:
         mult = 1./(1. + gam**2 - 2*gam*np.cos(theta))
+        mult = mult/(2*np.pi)
         f_spect = open(spect_file,"a")
         np.savetxt(f_spect, np.hstack((mult*c_z,0.*c_z)), fmt="%.10f")
         f_spect.close()

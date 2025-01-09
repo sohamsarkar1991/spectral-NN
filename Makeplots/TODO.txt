@@ -1,0 +1,16 @@
+$thetas = Get-content .\thetas.txt
+$indices = 0..21
+
+for($i in $indices)
+
+
+
+
+
+
+
+pdflatex Spect_1.tex
+pdflatex Spect_2.tex
+pdflatex Spect_3.tex
+
+pdflatex Spect_combine.tex -jobname="q=40"

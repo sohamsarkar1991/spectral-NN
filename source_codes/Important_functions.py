@@ -46,6 +46,19 @@ def parzen(s):
     else:
         return 0.
 
+def tukey_hanning(s):
+    if np.abs(s) <= 1.:
+        return (1+np.cos(np.pi*s))/2
+    else:
+        return 0.
+
+def quadratic_spectral(s):
+    t = 6*np.pi*s/5
+    if np.abs(s) > 0.:
+        return 3*(np.sin(t)/t - np.cos(t))/(t**2)
+    else:
+        return 0.
+
 ##### vectorization #####
 def kern_truncated(hs):
     return np.array(list(map(truncated,hs))).astype("float32")
@@ -55,6 +68,12 @@ def kern_bartlett(hs):
 
 def kern_parzen(hs):
     return np.array(list(map(parzen,hs))).astype("float32")
+
+def kern_tukey_hanning(hs):
+    return np.array(list(map(tukey_hanning,hs))).astype("float32")
+
+def kern_quadratic_spectral(hs):
+    return np.array(list(map(quadratic_spectral,hs))).astype("float32")
 
 ##### Loss module #####
 class loss_spectralNN:
@@ -72,8 +91,7 @@ class loss_spectralNN:
         self.N = N
         self.q = q
         self.gr = int(grid_size/2)
-        self.thetas = torch.arange(start=-self.gr,end=self.gr+0.5,step=1.,dtype=torch.float32,requires_grad=False)/(self.gr+1)*np.pi
-        #self.thetas = torch.empty(2*self.gr+1,dtype=torch.float32,requires_grad=False)
+        #self.thetas = torch.arange(start=-self.gr,end=self.gr+0.5,step=1.,dtype=torch.float32,requires_grad=False)/(self.gr+1)*np.pi
         hs = np.arange(start=-self.q,stop=self.q+0.5,step=1.,dtype="float32")
         self.C_diff = torch.from_numpy(np.array([[h1-h2 for h2 in hs] for h1 in hs]))
         self.w = torch.from_numpy(wt_fn(hs/self.q))
@@ -262,7 +280,7 @@ class EarlyStopping:
 ##### Save and load best state_dict #####        
 class BestState:
     """Early stops the training if validation loss doesn't improve after a given patience."""
-    def __init__(self, filename='checkpoint_spectNN.pt'):
+    def __init__(self, filename="checkpoint_spectNN.pt"):
         """
         Args:
             filename : file on which the best model will be stored
@@ -300,16 +318,18 @@ class BestState:
 
 ##### Optimization routine #####
 
-def spect_NN_optimizer(x,u,model,loss,optimizer,epochs=1000):
-    #l_tr = []
+def spect_NN_optimizer(x,u,model,loss,optimizer,epochs=1000,checkpoint_file="checkpoint.pt"):
+    l_tr = []
+    #best_state = BestState(checkpoint_file)
     for epoch in range(epochs):
         l = loss.loss_fn(x,model(u))
         optimizer.zero_grad()
         l.backward()
         optimizer.step()
-        #l_tr.append(l.item())
-    #return l_tr
-    return 0.
+        l_tr.append(l.item())
+    torch.save(model.state_dict(), checkpoint_file)
+    return l_tr
+    #return 0.
 
 """ Need to modify """
 def spect_NN_optim_best(x,u,model,loss_fn,optimizer,split,epochs=1000,burn_in=500,interval=1,checkpoint_file='Checkpoint.pt'):
@@ -378,10 +398,10 @@ def spectral_error_computation(spect_est,theta_file="True_thetas.dat",loc_file="
     tr_loc = torch.from_numpy(tr_loc)
     spect_tr = torch.from_numpy(spect_tr)
 
-    tr_re = 0.
-    tr_im = 0.
-    err_re = 0.
-    err_im = 0.
+    tr_cospect = 0.
+    tr_quadspect = 0.
+    err_cospect = 0.
+    err_quadspect = 0.
     den = 0.
     num = 0.
     with torch.no_grad():

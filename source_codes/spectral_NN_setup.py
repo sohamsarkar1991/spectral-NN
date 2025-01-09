@@ -12,9 +12,11 @@ directory = "C:\\Users\\Soham\\Git\\spectral-NN\\Data\\"
 
 act_fn = torch.nn.Sigmoid() # activation function
 init = torch.nn.init.xavier_normal_ # initialization method
-wt_fn = Ifn.kern_truncated # weight function
+#wt_fn = Ifn.kern_truncated # weight function
 #wt_fn = Ifn.kern_bartlett 
 #wt_fn = Ifn.kern_parzen
+#wt_fn = Ifn.kern_tukey_hanning
+wt_fn = Ifn.kern_quadratic_spectral
 loss_grid = 100
 optimizer = torch.optim.Adam
 lr = 0.01

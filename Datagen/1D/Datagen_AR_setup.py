@@ -20,9 +20,10 @@ method = lambda s,t: dn.BM(s,t)
 O = None
 
 ### For true spectrum ###
-K = 20
-M = 500
+K = 10 # number of angles (theta)
+M1 = 50000 # number of locations at which the true spectrum is evaluated (at each angle)
+M2 = 500 # resolution of the true grided spectrum (at each angle)
 
-dn.datagen_AR1_simple(N,gr_size,d,replicates,method,O,gam,N0,folder)
-#dn.true_spectrum_AR1_simple(K,M,d,replicates,method,O,gam,folder)
-dn.true_spectrum_grid_AR1_simple(K,M,d,method,O,gam,folder)
+#dn.datagen_AR1_simple(N,gr_size,d,replicates,method,O,gam,N0,folder)
+dn.true_spectrum_AR1_simple(K,M1,d,replicates,method,O,gam,folder)
+dn.true_spectrum_grid_AR1_simple(K,M2,d,method,O,gam,folder)
