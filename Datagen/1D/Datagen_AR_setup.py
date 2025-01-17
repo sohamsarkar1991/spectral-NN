@@ -3,27 +3,27 @@
 
 import datagen_AR1 as dn
 import numpy as np
-np.random.seed(12345)
+np.random.seed(54321)
 
-folder = "Data"
+folder = "Data" #where the data will be stored
 
 ### For data generation ###
-N = 512
-N0 = 100
-gr_size = 200
-d = 1
-gam = 0.5
-replicates = 25
-method = lambda s,t: dn.BM(s,t)
+N = 500 #number of curves/surfaces/fields
+gr_size = 100 #number of grid points at which data will be generated
+d = 1 #dimension
+gam = 0.5 #autoregression coefficient
+replicates = 25 #number of replicates
+N0 = 100 #number of burn-in sample to achieve stationarity
+method = lambda s,t: dn.BM(s,t) #specification of covariance kernel
 #theta = np.pi/4
 #O = np.array([[np.cos(theta),-np.sin(theta)],[np.sin(theta),np.cos(theta)]])
-O = None
+O = None #rotation of the covariance kernel
 
 ### For true spectrum ###
-K = 10 # number of angles (theta)
+K = 10 # number of angles (theta) is 2*K+1
 M1 = 50000 # number of locations at which the true spectrum is evaluated (at each angle)
 M2 = 500 # resolution of the true grided spectrum (at each angle)
 
-#dn.datagen_AR1_simple(N,gr_size,d,replicates,method,O,gam,N0,folder)
+dn.datagen_AR1_simple(N,gr_size,d,replicates,method,O,gam,N0,folder)
 dn.true_spectrum_AR1_simple(K,M1,d,replicates,method,O,gam,folder)
 dn.true_spectrum_grid_AR1_simple(K,M2,d,method,O,gam,folder)

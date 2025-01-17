@@ -173,8 +173,8 @@ class empirical_spectral_density:
             self.lagged_covariance[q,:,:] += torch.einsum("i,j -> ij", x[i,:], x[i,:])
         for h in range(1,q+1):
             for i in range(N-h):
-                self.lagged_covariance[h,:,:] += torch.einsum("i,j -> ij", x[i,:], x[i+h,:])
-            self.lagged_covariance[h+q,:,:] = self.lagged_covariance[h,:,:]
+                self.lagged_covariance[q-h,:,:] += torch.einsum("i,j -> ij", x[i,:], x[i+h,:])
+                self.lagged_covariance[q+h,:,:] += torch.einsum("i,j -> ij", x[i+h,:], x[i,:])
         self.lagged_covariance = self.lagged_covariance/N
         
         self.hs = np.arange(start=-q,stop=q+0.5,step=1.,dtype="float32")
@@ -201,11 +201,15 @@ class spectral_density_evaluation:
 
         self.lam = torch.empty([self.M,self.M,2*self.L+1,2*self.L+1,2*self.q+1],dtype=torch.float32,requires_grad=False)
         with torch.no_grad():
-            for h in range(2*self.q+1):
+            for j1 in range(2*self.L+1):
+                for j2 in range(2*self.L+1):
+                    self.lam[:,:,j1,j2,self.q] = torch.einsum("ij,kj -> ik", self.model.xi[:,j1:(j1+self.N)], model.xi[:,j2:(j2+self.N)])/self.N
+            for h in range(1,self.q+1):
                 N1 = self.N-h
                 for j1 in range(2*self.L+1):
                     for j2 in range(2*self.L+1):
-                        self.lam[:,:,j1,j2,h] = torch.einsum("ij,kj -> ik", model.xi[:,(j1+h):(j1+h+N1)], model.xi[:,j2:(j2+N1)])/self.N
+                        self.lam[:,:,j1,j2,self.q+h] = torch.einsum("ij,kj -> ik", self.model.xi[:,(j1+h):(j1+h+N1)], model.xi[:,j2:(j2+N1)])/self.N
+                        self.lam[:,:,j1,j2,self.q-h] = torch.einsum("ij,kj -> ik", self.model.xi[:,j1:(j1+N1)], model.xi[:,(j2+h):(j2+h+N1)])/self.N
 
     def evaluate(self, theta, u, v):
         with torch.no_grad():

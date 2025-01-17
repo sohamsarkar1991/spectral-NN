@@ -6,9 +6,8 @@ import numpy as np
 import torch
 import Important_functions as Ifn
 
-#directory = "C:\\Soham\\Git\\spectral-NN\\Data\\" # should be the directory where the data are located
-directory = "C:\\Users\\Soham\\Git\\spectral-NN\\Data\\"
-#directory = "/home/soham/GitHub/spectral-NN/Data/"
+#directory = "C:\\Users\\Soham\\Git\\spectral-NN\\Data\\" # should be the directory where the data are located
+directory = "/home/soham/Git/spectral-NN/Data/"
 
 act_fn = torch.nn.Sigmoid() # activation function
 init = torch.nn.init.xavier_normal_ # initialization method
