@@ -281,7 +281,13 @@ def true_spectrum_grid_AR1_simple(K,M,d,method=None,rot=None,gam=0.5,folder=""):
         and the locations are written on "True_locations_grid.dat".
     """
     print("Writing true specturm ...")
-    thetas = np.arange(start=-K,stop=K+0.5,step=1,dtype="float32")/K*np.pi
+    #thetas = np.arange(start=-K,stop=K+0.5,step=1,dtype="float32")/K*np.pi
+    thetas = np.empty(2*K+1, dtype="float32")
+    thetas[K] = 0.
+    for i in range(1,K+1):
+        thetas[K+i] = 2**i
+        thetas[K-i] = -thetas[K+i]
+    thetas = thetas/(2**K)*np.pi 
     np.savetxt(os.path.join(folder,"True_thetas_grid.dat"), thetas, fmt="%.10f")
     print_locations(M,d, file=os.path.join(folder,"True_locations_grid.dat"))
     spect_file = os.path.join(folder,"True_spectrum_grid.dat")
