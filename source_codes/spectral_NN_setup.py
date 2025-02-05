@@ -20,4 +20,6 @@ loss_grid = 100
 optimizer = torch.optim.Adam
 lr = 0.01
 epochs = 1000 # number of epochs
+burn_in = 750 # burn-in period
+interval = 1  # interval after which the best state will be checked 
 replicates = range(25)

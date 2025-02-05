@@ -23,14 +23,14 @@ def spectral_NN_multirun(method,M,L,depth,width,q):
         os.mkdir("Results")
 
     if method.lower()=="shallow":
-        err_file = os.path.join("Results","spectral_Shallow_"+str(M)+"_"+str(L)+"_"+str(width)+".txt")
-        plot_folder = "shallow_"+str(M)+"_"+str(L)+"_"+str(width)
+        err_file = os.path.join("Results","spectral_Shallow_"+str(q)+"_"+str(M)+"_"+str(L)+"_"+str(width)+".txt")
+        #plot_folder = "shallow_"+str(q)+"_"+str(M)+"_"+str(L)+"_"+str(width)
     else:
-        err_file = os.path.join("Results","spectral_"+method+"_"+str(M)+"_"+str(L)+"_"+str(depth)+"_"+str(width)+".txt")
-        plot_folder = method+"_"+str(M)+"_"+str(L)+"_"+str(depth)+"_"+str(width)
+        err_file = os.path.join("Results","spectral_"+method+"_"+str(q)+"_"+str(M)+"_"+str(L)+"_"+str(depth)+"_"+str(width)+".txt")
+        #plot_folder = method+"_"+str(q)+"_"+str(M)+"_"+str(L)+"_"+str(depth)+"_"+str(width)
 
-    if not os.path.isdir("Plots"):
-        os.mkdir("Plots")
+    #if not os.path.isdir("Plots"):
+    #    os.mkdir("Plots")
 
     dirc = setup.directory
     replicates = setup.replicates
@@ -53,29 +53,29 @@ def spectral_NN_multirun(method,M,L,depth,width,q):
         x = torch.from_numpy(x)
         x = x - torch.mean(x,dim=0,keepdim=True)
 
-        if not os.path.isdir(os.path.join("Plots","Ex"+str(repl+1))):
-            os.mkdir(os.path.join("Plots","Ex"+str(repl+1)))
-            os.mkdir(os.path.join("Plots","Ex"+str(repl+1),plot_folder))
-        else:
-            if not os.path.isdir(os.path.join("Plots","Ex"+str(repl+1),plot_folder)):
-                os.mkdir(os.path.join("Plots","Ex"+str(repl+1),plot_folder))
+        #if not os.path.isdir(os.path.join("Plots","Ex"+str(repl+1))):
+        #    os.mkdir(os.path.join("Plots","Ex"+str(repl+1)))
+        #    os.mkdir(os.path.join("Plots","Ex"+str(repl+1),plot_folder))
+        #else:
+        #    if not os.path.isdir(os.path.join("Plots","Ex"+str(repl+1),plot_folder)):
+        #        os.mkdir(os.path.join("Plots","Ex"+str(repl+1),plot_folder))
 
 
         if method.lower()=="shallow":
             model = spectNN.spectralNNShallow(N,d,M,L,setup.act_fn,setup.init)
-            check_file = "Shallow_"+str(M)+"_"+str(L)+".pt"
+            check_file = "Shallow_"+str(q)+"_"+str(M)+"_"+str(L)+".pt"
         elif method.lower()=="deep":
             model = spectNN.spectralNNDeep(N,d,M,L,depth,width,setup.act_fn,setup.init)
-            check_file = "Deep_"+str(M)+"_"+str(L)+"_"+str(depth)+"_"+str(width)+".pt"
+            check_file = "Deep_"+str(q)+"_"+str(M)+"_"+str(L)+"_"+str(depth)+"_"+str(width)+".pt"
         elif method.lower()=="deepshared1":
             model = spectNN.spectralNNDeepshared1(N,d,M,L,depth,width,setup.act_fn,setup.init)
-            check_file = "Deepshared1_"+str(M)+"_"+str(L)+"_"+str(depth)+"_"+str(width)+".pt"
+            check_file = "Deepshared1_"+str(q)+"_"+str(M)+"_"+str(L)+"_"+str(depth)+"_"+str(width)+".pt"
         elif method.lower()=="deepshared2":
             model = spectNN.spectralNNDeepshared2(N,d,M,L,depth,width,setup.act_fn,setup.init)
-            check_file = "Deepshared2_"+str(M)+"_"+str(L)+"_"+str(depth)+"_"+str(width)+".pt"
+            check_file = "Deepshared2_"+str(q)+"_"+str(M)+"_"+str(L)+"_"+str(depth)+"_"+str(width)+".pt"
         elif method.lower()=="deepshared3":
             model = spectNN.spectralNNDeepshared3(N,d,M,L,depth,width,setup.act_fn,setup.init)
-            check_file = "Deepshared3_"+str(M)+"_"+str(L)+"_"+str(depth)+"_"+str(width)+".pt"
+            check_file = "Deepshared3_"+str(q)+"_"+str(M)+"_"+str(L)+"_"+str(depth)+"_"+str(width)+".pt"
         else:
             exit("Undefined model specified! Aborting...")
 
@@ -83,16 +83,20 @@ def spectral_NN_multirun(method,M,L,depth,width,q):
         loss = Ifn.loss_spectralNN(N, setup.wt_fn, grid_size=setup.loss_grid, q=q)
         print("Fitting the model ...")
         start_time = time.time()
-        l_tr = Ifn.spect_NN_optimizer(x,u,model,loss,optimizer,epochs=setup.epochs,checkpoint_file=check_file)
+        #l_tr = Ifn.spectral_NN_optim(x,u,model,loss,optimizer,epochs=setup.epochs,checkpoint_file=check_file)
+        epoch = Ifn.spectral_NN_optim_best(x,u,model,loss,optimizer,
+                                          epochs=setup.epochs,burn_in=setup.burn_in,interval=setup.interval,
+                                          checkpoint_file=check_file)
         time_ellapsed = time.time() - start_time
         print("Model fitted. Time taken: {} seconds" .format(time_ellapsed))
+        print("Best loss achieved at epoch {}" .format(epoch))
 
         with torch.no_grad():
             num = loss.loss_fn(x,model(u)).item()
-            den = loss.loss_fn(x,0*x).item()
+            den = loss.loss_fn(x,0.*x).item()
             train_err = num/den
         print("Relative training error: {:.2f}%" .format(train_err*100))
-        print("Numerator: {:.4f}, Denominator: {:.4f}" .format(num,den))
+        #print("Numerator: {:.4f}, Denominator: {:.4f}" .format(num,den))
 
         spect_dens_est = Ifn.spectral_density_evaluation(model, q=q, wt_fn=setup.wt_fn)
         theta_file = dirc+"True_thetas"+str(repl+1)+".dat"
@@ -102,18 +106,19 @@ def spectral_NN_multirun(method,M,L,depth,width,q):
         test_err,num,den,tr_cospect,tr_quadspect,err_cospect,err_quadspect = Ifn.spectral_error_computation(spect_dens_est,theta_file,loc_file,spect_file)
 
         print("Relative test error: {:.2f}%" .format(test_err*100))
-        print("Numerator: {:.4f}, Denominator: {:.4f}" .format(num,den))
-        print("Cospectra: Error - {:.4f}, Actual - {:.4f}" .format(err_cospect,tr_cospect))
-        print("Quadspectra: Error - {:.4f}, Actual - {:.4f}" .format(err_quadspect,tr_quadspect))
+        #print("Numerator: {:.4f}, Denominator: {:.4f}" .format(num,den))
+        #print("Cospectra: Error - {:.4f}, Actual - {:.4f}" .format(err_cospect,tr_cospect))
+        #print("Quadspectra: Error - {:.4f}, Actual - {:.4f}" .format(err_quadspect,tr_quadspect))
 
         f_err = open(err_file,"a")
         f_err.write("Example{}:\n" .format(repl+1))
-        f_err.write("Fitting time - {:.10f} seconds\n" .format(time_ellapsed))
+        f_err.write("Fitting time - {:.10f} seconds. Best result at epoch {}\n" .format(time_ellapsed,epoch))
         f_err.write("Relative errors: Training - {:.10f}\tTest - {:.10f}\n" .format(train_err,test_err))
         f_err.write("Cospectra: Error - {:.4f}, Actual - {:.4f}\n" .format(err_cospect,tr_cospect))
         f_err.write("Quadspectra: Error - {:.4f}, Actual - {:.4f}\n\n" .format(err_quadspect,tr_quadspect))
         f_err.close()
 
+        """
         true_loc = np.loadtxt(dirc+"True_locations_grid.dat",dtype="float32")
         if d == 1:
             true_loc = true_loc.reshape(-1,1)
@@ -151,5 +156,6 @@ def spectral_NN_multirun(method,M,L,depth,width,q):
             fig.savefig(os.path.join("Plots","Ex"+str(repl+1),plot_folder,"Fitted_quadspect_"+str(t+1)+".pdf"),
                 bbox_inches="tight",dpi=300)
             plt.close("all")
+        """
  
     return 0.

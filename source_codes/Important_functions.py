@@ -232,8 +232,8 @@ class spectral_density_evaluation:
 
 ##### Early stopping routine #####
 class EarlyStopping:
-    """Early stops the training if validation loss doesn't improve after a given patience."""
-    def __init__(self, patience=10, delta=1e-4, filename='checkpoint_spectNN.pt'):
+    """Early stops the training if loss doesn't improve after a given patience"""
+    def __init__(self, patience=10, delta=1e-4, filename="checkpoint.pt"):
         """
         Args:
             patience (int): How long to wait after last time validation loss improved.
@@ -249,9 +249,9 @@ class EarlyStopping:
         self.delta = delta
         self.checkpoint = filename
 
-    def __call__(self, val_loss, model, epoch):
+    def __call__(self, loss, model, epoch):
 
-        score = val_loss
+        score = loss
 
         if self.best_score is None:
             self.best_score = score
@@ -270,31 +270,26 @@ class EarlyStopping:
             self.counter = 0
 
     def save_checkpoint(self, model):
-        '''
-        Save model when validation loss increase or doesn't decrease more than a certain level
-        '''
+        """Save model when validation loss increase or doesn't decrease more than a certain level"""
         torch.save(model.state_dict(), self.checkpoint)
         
     def load_checkpoint(self, model):
-        '''
-        Reset the model to the saved checkpoint
-        '''
-        model.load_state_dict(torch.load(self.checkpoint))
+        """Reset the model to the saved checkpoint"""
+        model.load_state_dict(torch.load(self.checkpoint, weights_only=True))
         
 ##### Save and load best state_dict #####        
 class BestState:
-    """Early stops the training if validation loss doesn't improve after a given patience."""
-    def __init__(self, filename="checkpoint_spectNN.pt"):
+    """Saves and returns the best parameters during the optimization"""
+    def __init__(self, filename="checkpoint.pt"):
         """
         Args:
-            filename : file on which the best model will be stored
-                            
+            filename : file on which the best model will be stored                         
         """
         self.best_score = None
         self.file = filename
         self.epoch = None
 
-    def __call__(self, error, model,epoch):
+    def __call__(self, error, model, epoch):
 
         score = error
 
@@ -308,84 +303,72 @@ class BestState:
             self.save_checkpoint(model)
 
     def save_checkpoint(self, model):
-        '''
-        Save model
-        '''
+        """Saves the model parameters"""
         torch.save(model.state_dict(), self.file)
         
     def load_checkpoint(self, model):
-        '''
-        Reset the model to the saved checkpoint
-        '''
-        model.load_state_dict(torch.load(self.file))
+        """Resets the model to the saved checkpoint"""
+        model.load_state_dict(torch.load(self.file, weights_only=True))
 
 
 ##### Optimization routine #####
 
-def spect_NN_optimizer(x,u,model,loss,optimizer,epochs=1000,checkpoint_file="checkpoint.pt"):
-    l_tr = []
-    #best_state = BestState(checkpoint_file)
+def spectral_NN_optim(x,u,model,loss,optimizer,epochs=1000,checkpoint_file="checkpoint.pt"):
+    #l_tr = []
     for epoch in range(epochs):
         l = loss.loss_fn(x,model(u))
         optimizer.zero_grad()
         l.backward()
         optimizer.step()
-        l_tr.append(l.item())
+        #l_tr.append(l.item())
     torch.save(model.state_dict(), checkpoint_file)
-    return l_tr
-    #return 0.
+    #return l_tr
+    return 0.
 
-""" Need to modify """
-def spect_NN_optim_best(x,u,model,loss_fn,optimizer,split,epochs=1000,burn_in=500,interval=1,checkpoint_file='Checkpoint.pt'):
+def spectral_NN_optim_best(x,u,model,loss,optimizer,epochs=1000,burn_in=500,interval=10,checkpoint_file="checkpoint.pt"):
     """
-    Optimization routine with on-the-go error computation. Returns the model state that produced the best error.
+    Optimization routine with on-the-go error computation. Returns the model state that produces the best error.
     INPUTS - x, u - data and locations
              model - the model to be fitted
-             loss_fn - loss function (MSE/COV/COV2)
-             optimizer - optimizer to be used. An element of class torch.optim
-             split - training and validation splitter function
+             loss - module to calculate the loss function
+             optimizer - optimizer to be used. an element of class torch.optim
              epochs - number of epochs
-             plot_filename - the filename in which the plots will be saved
+             burn_in - burn-in period, no early stopping
+             interval - interval at which loss will be checked
+             checkpoint_file - file in which best parameters will be stored
              
-    OUTPUTS - l_tr - training errors
-              l_va - validation errors
+    OUTPUTS - l_tr - training losses
+              best_epoch - epoch at which the best result is achieved
     """
-    D = u.shape[0]
-    l_tr = []
-    l_va = []
+    #l_tr = []
     
     best_state = BestState(checkpoint_file)
+    #best_state = EarlyStopping(filename=checkpoint_file)
     
     for epoch in range(burn_in):
-        for Q_tr in split(D):
-            loss = loss_fn(x[:,Q_tr],model(u[Q_tr,:]))
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
+        l = loss.loss_fn(x,model(u))
+        optimizer.zero_grad()
+        l.backward()
+        optimizer.step()
+        #l_tr.append(l.item())
         
     for epoch in range(burn_in,epochs):
-        train_losses = []
-        val_losses = []
-        for Q_tr in split(D):
-            loss = loss_fn(x[:,Q_tr],model(u[Q_tr,:]))
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-            train_losses.append(loss.item())
-            #with torch.no_grad():
-            #    loss = loss_fn(x[:,Q_va],model(u[Q_va,:]))
-            #    val_losses.append(loss.item())
-        l_tr.append(np.mean(train_losses))
-        #l_va.append(np.mean(val_losses))
-        with torch.no_grad():
-            loss = loss_fn(x,model(u))
-            l_va.append(loss.item())
+        l = loss.loss_fn(x,model(u))
+        optimizer.zero_grad()
+        l.backward()
+        optimizer.step()
+        #l_tr.append(l.item())
         if (epoch-burn_in)%interval == interval-1:
-            best_state(l_va[-1],model,epoch)
+            with torch.no_grad():
+                rel_err = l.item()/loss.loss_fn(x,0.*x).item()
+            best_state(rel_err,model,epoch)
+            #if best_state.early_stop:
+                #break
 
     best_state.load_checkpoint(model)
     epoch = best_state.epoch
-    return l_tr, l_va, epoch+1
+    #return l_tr, epoch+1
+    return epoch+1
 
 
 ##### Error computation #####
@@ -397,7 +380,7 @@ def spectral_error_computation(spect_est,theta_file="True_thetas.dat",loc_file="
     D_star = int(tr_loc.shape[0]/K)
     d = int(tr_loc.shape[1]/2)
     if int(spect_tr.shape[0]/K) != D_star:
-        exit('Shape mismatch!! Aborting..')
+        exit("Shape mismatch!! Aborting...")
     tr_thetas = torch.from_numpy(tr_thetas)
     tr_loc = torch.from_numpy(tr_loc)
     spect_tr = torch.from_numpy(spect_tr)
