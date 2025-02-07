@@ -13,7 +13,7 @@ def error_summary(errors):
     err_iqr = err_q3 - err_q1
     return np.array([err_mean, err_sd, err_median, err_iqr, err_min, err_max])
 
-ex_name = "BM_gam=0.5_N=500_d=1_D=100"
+ex_name = "Matern_0.01_gam=0.5_N=500_d=1_D=100"
 folder = os.path.join("/home", "soham", "Simulations", "spectral-NN",ex_name)
 print(folder)
 
@@ -22,14 +22,14 @@ f_err2 = open(os.path.join("/home", "soham", "Simulations", "spectral-NN",ex_nam
 
 for wt_fun in ["Parzen"]: #["truncated","Bartlett","Parzen","Tukey_Hanning","quadratic_spectral"]:
     q = 20
-    files = os.listdir(os.path.join(folder,wt_fun+"_q="+str(q),"Results_New"))
+    files = os.listdir(os.path.join(folder,wt_fun,"Results"))
     files.sort()
     print(files)
     f_err1.write(wt_fun+"\n")
     f_err2.write(wt_fun+"\n")
     print(wt_fun)
     for file in files:
-        with open(os.path.join(folder,wt_fun+"_q="+str(q),"Results_New",file)) as f:
+        with open(os.path.join(folder,wt_fun,"Results",file)) as f:
             f_cont = f.readlines()
             errors_total = []
             errors_cospect = []

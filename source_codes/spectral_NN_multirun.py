@@ -114,8 +114,8 @@ def spectral_NN_multirun(method,M,L,depth,width,q):
         f_err.write("Example{}:\n" .format(repl+1))
         f_err.write("Fitting time - {:.10f} seconds. Best result at epoch {}\n" .format(time_ellapsed,epoch))
         f_err.write("Relative errors: Training - {:.10f}\tTest - {:.10f}\n" .format(train_err,test_err))
-        f_err.write("Cospectra: Error - {:.4f}, Actual - {:.4f}\n" .format(err_cospect,tr_cospect))
-        f_err.write("Quadspectra: Error - {:.4f}, Actual - {:.4f}\n\n" .format(err_quadspect,tr_quadspect))
+        f_err.write("Cospectra: Error - {:.10f}, Actual - {:.10f}\n" .format(err_cospect,tr_cospect))
+        f_err.write("Quadspectra: Error - {:.10f}, Actual - {:.10f}\n\n" .format(err_quadspect,tr_quadspect))
         f_err.close()
 
         """

@@ -374,7 +374,7 @@ def spectral_NN_optim_best(x,u,model,loss,optimizer,epochs=1000,burn_in=500,inte
 ##### Error computation #####
 def spectral_error_computation(spect_est,theta_file="True_thetas.dat",loc_file="True_locations.dat",spect_file="True_spectrum.dat"):
     tr_thetas = np.loadtxt(theta_file,dtype="float32")
-    tr_loc = np.loadtxt(loc_file,dtype='float32')
+    tr_loc = np.loadtxt(loc_file,dtype="float32")
     spect_tr = np.loadtxt(spect_file,dtype="float32")
     K = len(tr_thetas)
     D_star = int(tr_loc.shape[0]/K)
