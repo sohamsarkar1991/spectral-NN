@@ -1,0 +1,127 @@
+library(MASS)
+library(fda)
+
+source('library.R')
+source('loaddata.R')
+
+n = dim(X$coef)[2]
+Q = 200
+
+## Static PCA ##
+PR = prcomp(t(X$coef))
+Y1 = PR$x
+Y1[,-1] = 0
+Xpca = Y1 %*% t(PR$rotation)
+
+## Dynamic PCA ##
+XI.est = dprcomp(t(X$coef),weights="Bartlett", freq=pi*-Q:Q/Q)  # finds the optimal filter
+Y.est = filter.process(t(X$coef), XI.est)  # applies the filter
+Y.est[,-1] = 0 # forces the use of only one component
+Xdpca.est = filter.process( Y.est, t(rev(XI.est)) )    # deconvolution
+
+# Creates functional objects
+Xdpca.est.fd = fd(t(Re(Xdpca.est)),basis=X$basis)
+Xpca.fd = fd(t(Xpca),basis=X$basis)
+
+# Write down results
+options(digits=2)
+ind = 3:(n-2)
+cat("Variance explained by the first DPCA:      ")
+cat(1 - MSE(t(X$coef)[ind,],Xdpca.est[ind,]) / MSE(t(X$coef)[ind,],0))
+cat("\nVariance explained by the first PCA:       ")
+cat(1 - MSE(t(X$coef)[ind,],Xpca[ind,]) / MSE(t(X$coef)[ind,],0))
+cat("\n")
+
+cat("\nSum of squared norms of the first filter:  ")
+options(digits=3)
+cat(sum(XI.est$operators[,,1]^2))
+cat("\n")
+
+setEPS()
+
+# Figure 1: 10 observations reconstructed from the first component
+ind = 1:10 + 20
+postscript("figures/1.eps",width=8,height=3.75)
+par(mfrow=c(1,3))
+plot(X[ind],ylim=c(-6,3),xlab="Intraday time", ylab="Sqrt(PM10)")
+#title("Original curves")
+plot(Xpca.fd[ind],ylim=c(-6,3),xlab="Intraday time", ylab="Sqrt(PM10)")
+#title("PCA curves")
+plot(Xdpca.est.fd[ind],ylim=c(-6,3),xlab="Intraday time", ylab="Sqrt(PM10)")
+#title("DPCA curves")
+par(mfrow=c(1,1))
+dev.off()
+
+# Figure 2: All observations and the mean
+postscript("figures/2.eps")
+plot(mean(Xorg))
+plot(Xorg,xlab="Intraday time", ylab="Sqrt(PM10)")
+lines(mean(Xorg),lwd=4)
+dev.off()
+
+# Figure 3: 5 elements of the first filter
+postscript("figures/3.eps",width=10,height=4)
+d = 2
+for (i in (11 - d):(11 + d)){
+  F = fd((XI.est$operators[i,1,]),X$basis)
+  F$basis$rangeval = i - 11 + c(0,1)
+  if (i == 11 - d){
+    xlim = c(-d,d+1)
+    plot(F,xlim=xlim,ylim=c(-0.3,1.2),xlab="", ylab="",xaxt='n',lwd=4,col=1,bty="n")
+  }
+  else {
+    lines(F,lwd=4,col=1)
+  }
+  if (i == 11)
+    abline(h=0,lty=1)
+  abline(v=F$basis$rangeval[1],lty=2)
+  abline(v=F$basis$rangeval[1]+1,lty=2)
+}
+dev.off()
+
+# Figure 4: Scores: static, dynamic and the differences
+postscript("figures/4a.eps")
+plot(Re(Y1[,1]),t='l',ylim=c(-3,4.5), ylab="1st FPC scores", xlab="Time [days]")
+dev.off()
+postscript("figures/4b.eps")
+plot(Re(Y.est[,1]),t='l', ylab="1st DFPC scores", xlab="Time [days]")
+dev.off()
+postscript("figures/4c.eps")
+plot(Re(Y1[,1]-Y.est[,1]),t='l',ylim=c(-3,4.5), ylab="Differences", xlab="Time [days]")
+dev.off()
+
+# Figure 5: Scores: static, dynamic and the differences
+# TODO
+
+# Figure 6: The effect on the mean
+postscript("figures/6.eps",width=15,height=10)
+par(mfrow=c(2,4))
+L = 10
+for (c in 0:7){
+    s1 = c %% 2
+    c = (c-s1) / 2
+    s2 = c %% 2
+    c = (c-s2) / 2
+    s3 = c
+
+    s1 = s1*2 - 1
+    s2 = s2*2 - 1
+    s3 = s3*2 - 1
+
+    FI = fd(t(Re(XI.est$operators[(L+1+1):(L+1-1),1,])),basis=X$basis)
+    MEAN = mean(Xorg)
+    MEAN = MEAN + FI[1] * s1
+    MEAN = MEAN + FI[2] * s2
+    MEAN = MEAN + FI[3] * s3
+
+    par(cex=1.2)
+    plot(mean(Xorg),lwd=2, xlab="Intraday time", ylab="Sqrt(PM10)",ylim=c(4,8))
+    lines(MEAN,lwd=2, lty=2, col=1)
+    if (s3 == 1) s3 = "+1"
+    if (s2 == 1) s2 = "+1"
+    if (s1 == 1) s1 = "+1"
+
+    title(main=substitute(paste("(",delta[-1],",",delta[0],",",delta[1],") = (",p1,",",p2,",",p3,")",sep=""),list(p1=s3,p2=s2,p3=s1)))
+}
+par(mfrow=c(1,1))
+dev.off()
