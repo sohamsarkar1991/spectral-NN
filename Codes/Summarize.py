@@ -4,69 +4,63 @@
 import os
 import numpy as np
 
-def error_summary(errors):
-    err_min = np.min(errors)
-    err_max = np.max(errors)
-    err_mean = np.mean(errors)
-    err_sd = np.std(errors)/np.sqrt(len(errors))
-    err_q1, err_median, err_q3 = np.quantile(errors, [0.25,0.5,0.75])
-    err_iqr = err_q3 - err_q1
-    return np.array([err_mean, err_sd, err_median, err_iqr, err_min, err_max])
+def summary(values):
+    mean = np.mean(values)
+    sd = np.std(values)/np.sqrt(len(values))
+    return np.asarray([mean, sd])
 
-ex_name = "Matern_0.01_gam=0.5_N=500_d=1_D=100"
-folder = os.path.join("/home", "soham", "Simulations", "spectral-NN",ex_name)
-print(folder)
+def __main__():
+    folder = os.path.join("/home", "soham", "Git", "spectral-NN", "Results")
 
-f_err1 = open(os.path.join("/home", "soham", "Simulations", "spectral-NN",ex_name,"Err_mean.txt"),"w")
-f_err2 = open(os.path.join("/home", "soham", "Simulations", "spectral-NN",ex_name,"Err_median_range.txt"),"w")
+    errs = np.empty([4], dtype=float)
+    times = np.empty([8], dtype=float)
+    err_file = open(os.path.join(folder,"Errors.txt"),"a")
+    time_file = open(os.path.join(folder,"Computing_times.txt"),"a")
 
-for wt_fun in ["Parzen"]: #["truncated","Bartlett","Parzen","Tukey_Hanning","quadratic_spectral"]:
-    q = 20
-    files = os.listdir(os.path.join(folder,wt_fun,"Results"))
-    files.sort()
-    print(files)
-    f_err1.write(wt_fun+"\n")
-    f_err2.write(wt_fun+"\n")
-    print(wt_fun)
-    for file in files:
-        with open(os.path.join(folder,wt_fun,"Results",file)) as f:
+    for i,fname in enumerate(["empirical", "spectral_NN"]):
+        file = os.path.join(folder,fname+".txt")
+        with open(file) as f:
             f_cont = f.readlines()
-            errors_total = []
-            errors_cospect = []
+            errors = []
+            fit_times = []
+            eval_times = []
             repl = 1
-            current_line = 5
-            flag = current_line <= len(f_cont)
+            current_line = 0
+            flag = len(f_cont)>=current_line+5
             while flag:
-                repl_id = int(f_cont[current_line-5].strip("\n").strip(":").strip("Example"))
+                repl_id = int(f_cont[current_line].strip("\n").strip(":").strip("Example"))
                 if not repl_id == repl:
-                    print("Some problem with the example id! Aborting ...")
+                    print("Problem with the example id! Aborting ...")
                     flag = False
                 else:
-                    rel_err = f_cont[current_line-3].strip("\n").split(" ")[-1]
-                    err_cospect = f_cont[current_line-2].strip("\n").split(" ")[3].strip(",")
-                    tr_cospect = f_cont[current_line-2].strip("\n").split(" ")[6].strip(",")
-                    #err_quadspect = f_cont[current_line-1].strip("\n").split(" ")[3].strip(",")
-                    errors_total.append(float(rel_err)*100.)
-                    errors_cospect.append(float(err_cospect)/float(tr_cospect)*100.)
+                    fit_time = float(f_cont[current_line+1].strip("\n").split(" ")[3])
+                    fit_times.append(fit_time)
+                    eval_time = float(f_cont[current_line+1].strip("\n").split(" ")[8])
+                    eval_times.append(eval_time)
+                    err = float(f_cont[current_line+2].strip("\n").split(" ")[-1])*100
+                    errors.append(err)
                     current_line += 6
                     repl += 1
-                    flag = current_line <= len(f_cont)
-            errors_total = np.asarray(errors_total)
-            errors_cospect = np.asarray(errors_cospect)
-            method = file.strip(".txt").strip("spectral_")
-            err_tot = error_summary(errors_total)
-            err_cospect = error_summary(errors_cospect)
-            print(method)
-            print(np.round(err_tot,decimals=2))
-            print(np.round(err_cospect,decimals=2))
-            f_err1.write(method+"\n")
-            f_err1.write("{:.6f}\t{:.6f}\t{:.6f}\t{:.6f}\n" .format(err_tot[0],err_tot[1],err_cospect[0],err_cospect[1]))
-            f_err2.write(method+"\n")
-            f_err2.write("{:.6f}\t{:.6f}\t{:.6f}\t{:.6f}\n" .format(err_tot[2],err_tot[3],err_cospect[2],err_cospect[3]))
-            f_err2.write("{:.6f}\t{:.6f}\t{:.6f}\t{:.6f}\n" .format(err_tot[4],err_tot[5],err_cospect[4],err_cospect[5]))
-    f_err1.write("\n")
-    f_err2.write("\n")
-f_err1.close()
-f_err2.close()
-
-
+                    flag = len(f_cont)>= current_line+5
+            summ = np.round(summary(errors),2)
+            errs[2*i] = summ[0]
+            errs[2*i+1] = summ[1]
+            summ = np.round(summary(fit_times),5)
+            times[2*i] = summ[0]
+            times[2*i+4] = summ[1]
+            summ = np.round(summary(eval_times),5)
+            times[2*i+1] = summ[0]
+            times[2*i+5] = summ[1]
+    
+    print("Errors: empirical - {}% ({}), spectral-NN - {}% ({})".format(errs[0],errs[1],errs[2],errs[3]))
+    print("Average time taken: empirical - {:.3f} + {:.3f} sec., spectral-NN - {:.3f} + {:.3f} sec." 
+          .format(times[0],times[1],times[2],times[3]))
+    
+    np.savetxt(err_file, errs, fmt="%.2f", newline="\t")
+    err_file.write("\n")
+    err_file.close()
+    
+    np.savetxt(time_file, times, fmt="%.3f", newline="\t")
+    time_file.write("\n")
+    time_file.close()
+    return 0.

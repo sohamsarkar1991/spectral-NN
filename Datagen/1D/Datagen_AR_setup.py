@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-import datagen_AR1 as dn
+import data_generation_functions as dn
 import numpy as np
 np.random.seed(54321)
 
@@ -14,8 +14,8 @@ d = 1 #dimension
 gam = 0 #autoregression coefficient
 replicates = 25 #number of replicates
 N0 = 100 #number of burn-in sample to achieve stationarity
-#method = lambda s,t: dn.iBM(s,t) #specification of covariance kernel
-method = lambda s,t: dn.matern(s,t,nu=0.01) #specification of covariance kernel
+method = lambda s,t: dn.BM(s,t) #specification of covariance kernel
+#method = lambda s,t: dn.matern(s,t,nu=0.01) #specification of covariance kernel
 #theta = np.pi/4
 #O = np.array([[np.cos(theta),-np.sin(theta)],[np.sin(theta),np.cos(theta)]])
 O = None #rotation of the covariance kernel

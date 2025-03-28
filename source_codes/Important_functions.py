@@ -166,7 +166,7 @@ class loss_spectralNN:
 
 class empirical_spectral_density:
     """Module to evaluate the empirical spectral density"""
-    def __init__(self, x, q, wt_fn):
+    def __init__(self, x, u, q, wt_fn):
         N, D = x.shape
         self.lagged_covariance = torch.zeros([2*q+1,D,D],dtype=torch.float32,requires_grad=False)
         for i in range(N):
@@ -180,12 +180,51 @@ class empirical_spectral_density:
         self.hs = np.arange(start=-q,stop=q+0.5,step=1.,dtype="float32")
         self.w = torch.from_numpy(wt_fn(self.hs/q))
         self.hs = torch.from_numpy(self.hs)
+        self.u = u
 
-    def evaluate(self, theta):
-        co_spect = torch.einsum("h,h,hij -> ij", self.w, torch.cos(self.hs*theta), self.lagged_covariance)/(2*np.pi)
-        quad_spect = torch.einsum("h,h,hij -> ij", self.w, torch.sin(self.hs*theta), self.lagged_covariance)/(2*np.pi)
+    def pixelate(self, u0):
+        return torch.argmin(torch.norm(self.u-u0,p=float('inf'),dim=1))
+
+    def evaluate_complete(self, theta):
+        with torch.no_grad():
+            co_spect = torch.einsum("h,h,hij -> ij", self.w, torch.cos(self.hs*theta), self.lagged_covariance)/(2*np.pi)
+            quad_spect = torch.einsum("h,h,hij -> ij", self.w, torch.sin(self.hs*theta), self.lagged_covariance)/(2*np.pi)
         return list([co_spect, quad_spect])
 
+    def evaluate_pixelated(self, theta, u, v):
+        """Evaluate the empirical spectral density at any location
+           (not necessarily the observation grid). Estimation is
+           done by constant imputation over pixels.
+           
+        Arguments:
+            theta - angle for spectral density
+            u, v - locations where evaluation is sought
+            """
+        with torch.no_grad():
+            co_spect, quad_spect = self.evaluate_complete(theta)
+            M = u.shape[0]
+            emp_spect = torch.empty((M,2), dtype=torch.float32)
+            for i in range(M):
+                j1 = self.pixelate(u[i,:])
+                j2 = self.pixelate(v[i,:])
+                emp_spect[i,0] = co_spect[j1,j2]
+                emp_spect[i,1] = quad_spect[j1,j2]
+        return emp_spect
+    
+    def evaluate_grid(self, theta, u):
+        with torch.no_grad():
+            co_spect, quad_spect = self.evaluate_complete(theta)
+            M = u.shape[0]
+            idx = torch.empty(M, dtype=torch.int)
+            for i in range(M):
+                idx[i] = self.pixelate(u[i,:])
+            co_spect_grid = torch.empty((M,M), dtype=torch.float32)
+            quad_spect_grid = torch.empty((M,M), dtype=torch.float32)
+            for i in range(M):
+                co_spect_grid[i,:] = co_spect[idx[i],idx]
+                quad_spect_grid[i,:] = quad_spect[idx[i],idx]
+        return list([co_spect_grid,quad_spect_grid])
+        
 
 class spectral_density_evaluation:
     """Module to evaluate the spectral density estimator for a fitted spectral-NN model"""
@@ -225,9 +264,9 @@ class spectral_density_evaluation:
         with torch.no_grad():
             Gu = self.model.first_step(u) # ((g_{m,h}(u))) size M x 2L+1 x D
             ah_u = torch.einsum("ijklm, ikp, jlq -> mpq", self.lam, Gu, Gu) #a_h(u) size 2q+1 x D x D
-            co_spect = (torch.einsum("h,h,hij -> ij", self.w, torch.cos(self.hs*theta), ah_u))/(2*np.pi)
-            quad_spect = (torch.einsum("h,h,hij -> ij", self.w, torch.sin(self.hs*theta), ah_u))/(2*np.pi)
-            return list([co_spect, quad_spect])
+            co_spect_grid = (torch.einsum("h,h,hij -> ij", self.w, torch.cos(self.hs*theta), ah_u))/(2*np.pi)
+            quad_spect_grid = (torch.einsum("h,h,hij -> ij", self.w, torch.sin(self.hs*theta), ah_u))/(2*np.pi)
+            return list([co_spect_grid, quad_spect_grid])
 
 
 ##### Early stopping routine #####
@@ -396,6 +435,53 @@ def spectral_error_computation(spect_est,theta_file="True_thetas.dat",loc_file="
             u_tr = tr_loc[i*D_star:(i+1)*D_star,:d]
             v_tr = tr_loc[i*D_star:(i+1)*D_star,d:]
             f_hat = spect_est.evaluate(theta,u_tr,v_tr)
+            f_tr = spect_tr[i*D_star:(i+1)*D_star,:]
+            num_cospect = torch.norm(f_tr[:,0]-f_hat[:,0]).item()
+            den_cospect = torch.norm(f_tr[:,0]).item()
+            num_quadspect = torch.norm(f_tr[:,1]-f_hat[:,1]).item()
+            den_quadspect = torch.norm(f_tr[:,1]).item()
+            tr_cospect += den_cospect
+            tr_quadspect += den_quadspect
+            err_cospect += num_cospect
+            err_quadspect += num_quadspect
+            num += np.sqrt(num_cospect**2 + num_quadspect**2)
+            den += np.sqrt(den_cospect**2 + den_quadspect**2)
+
+    tr_cospect = tr_cospect/(K*np.sqrt(D_star))
+    tr_quadspect = tr_quadspect/(K*np.sqrt(D_star))
+    err_cospect = err_cospect/(K*np.sqrt(D_star))
+    err_quadspect = err_quadspect/(K*np.sqrt(D_star))
+    num = num/(K*np.sqrt(D_star))
+    den = den/(K*np.sqrt(D_star))
+    test_err = num/den
+
+    return [test_err,num,den,tr_cospect,tr_quadspect,err_cospect,err_quadspect]
+
+
+def emp_spectral_error_computation(emp_spect_dens,theta_file="True_thetas.dat",loc_file="True_locations.dat",spect_file="True_spectrum.dat"):
+    tr_thetas = np.loadtxt(theta_file,dtype="float32")
+    tr_loc = np.loadtxt(loc_file,dtype="float32")
+    spect_tr = np.loadtxt(spect_file,dtype="float32")
+    K = len(tr_thetas)
+    D_star = int(tr_loc.shape[0]/K)
+    d = int(tr_loc.shape[1]/2)
+    if int(spect_tr.shape[0]/K) != D_star:
+        exit("Shape mismatch!! Aborting...")
+    tr_thetas = torch.from_numpy(tr_thetas)
+    tr_loc = torch.from_numpy(tr_loc)
+    spect_tr = torch.from_numpy(spect_tr)
+
+    tr_cospect = 0.
+    tr_quadspect = 0.
+    err_cospect = 0.
+    err_quadspect = 0.
+    den = 0.
+    num = 0.
+    with torch.no_grad():
+        for i,theta in enumerate(tr_thetas):
+            u_tr = tr_loc[i*D_star:(i+1)*D_star,:d]
+            v_tr = tr_loc[i*D_star:(i+1)*D_star,d:]
+            f_hat = emp_spect_dens.evaluate_pixelated(theta,u_tr,v_tr)
             f_tr = spect_tr[i*D_star:(i+1)*D_star,:]
             num_cospect = torch.norm(f_tr[:,0]-f_hat[:,0]).item()
             den_cospect = torch.norm(f_tr[:,0]).item()
