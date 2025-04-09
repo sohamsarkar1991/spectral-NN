@@ -26,12 +26,14 @@ import Summarize
 
 par = None
 gam = 0.5
-N = 500
-#gr_size = 200
+#N = 500
+gr_size = 200
 for method in [("BM",None),("IBM",None),("Matern",0.001),("Matern",0.01),("Matern",0.1),("Matern",1)]:
     cov_type = method[0]
     par = method[1]
-    for gr_size in [20,40,80,160,320,640,1280,2560]:
+    #for gr_size in [20,40,80,160,320,640,1280,2560]:
+    for N in [100,200,400,800,1600]:
+    #for gam in [0.1,0.25,0.5,0.75,0.9]:
         print(time.ctime())
         print("Data generation:\n")
         datagen(cov=cov_type, par=par, replicates=25, N=N, gr_size=gr_size, gam=gam, true_spect_grid=False)
@@ -49,7 +51,7 @@ for method in [("BM",None),("IBM",None),("Matern",0.001),("Matern",0.01),("Mater
         print("\n")
     
         print("Summary:\n")
-        Summarize.__main__()
+        Summarize.__main__(idx="N")
         print(time.ctime())
         print("\n")
         

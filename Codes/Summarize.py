@@ -9,13 +9,13 @@ def summary(values):
     sd = np.std(values)/np.sqrt(len(values))
     return np.asarray([mean, sd])
 
-def __main__():
+def __main__(idx=""):
     folder = os.path.join("/home", "soham", "Git", "spectral-NN", "Results")
 
     errs = np.empty([4], dtype=float)
     times = np.empty([8], dtype=float)
-    err_file = open(os.path.join(folder,"Errors.txt"),"a")
-    time_file = open(os.path.join(folder,"Computing_times.txt"),"a")
+    err_file = open(os.path.join(folder,"Errors"+str(idx)+".txt"),"a")
+    time_file = open(os.path.join(folder,"Computing_times"+str(idx)+".txt"),"a")
 
     for i,fname in enumerate(["empirical", "spectral_NN"]):
         file = os.path.join(folder,fname+".txt")
