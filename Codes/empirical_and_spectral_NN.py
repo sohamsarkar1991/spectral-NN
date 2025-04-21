@@ -17,22 +17,21 @@ for filename in os.listdir(folder):
 ##sys.path.insert(1, os.path.join("C:\\", "Users", "Soham", "Git", "spectral-NN", "source_codes"))
 ##sys.path.insert(1, os.path.join("C:\\", "Users", "Soham", "Git", "spectral-NN", "Datagen", "1D"))
 sys.path.insert(1, os.path.join("/home", "soham", "Git", "spectral-NN", "source_codes"))
-sys.path.insert(2, os.path.join("/home", "soham", "Git", "spectral-NN", "Datagen", "1D"))
+sys.path.insert(2, os.path.join("/home", "soham", "Git", "spectral-NN", "Datagen", "2D"))
 
 from Datagen_AR import datagen
 from spectral_NN_multirun import spectral_NN_multirun as spect_multirun
 from empirical_spectral_density_multirun import emp_spect_dens_multirun as emp_multirun
 import Summarize
 
-par = None
 gam = 0.5
-#N = 500
+N = 250
 gr_size = 200
 for method in [("BM",None),("IBM",None),("Matern",0.001),("Matern",0.01),("Matern",0.1),("Matern",1)]:
     cov_type = method[0]
     par = method[1]
-    #for gr_size in [20,40,80,160,320,640,1280,2560]:
-    for N in [100,200,400,800,1600]:
+    for gr_size in [10,20,40,80,160,320,640,1280]:
+    #for N in [100,200,400,800,1600]:
     #for gam in [0.1,0.25,0.5,0.75,0.9]:
         print(time.ctime())
         print("Data generation:\n")
@@ -51,7 +50,7 @@ for method in [("BM",None),("IBM",None),("Matern",0.001),("Matern",0.01),("Mater
         print("\n")
     
         print("Summary:\n")
-        Summarize.__main__(idx="N")
+        Summarize.__main__(idx="gam")
         print(time.ctime())
         print("\n")
         
