@@ -175,7 +175,7 @@ class empirical_spectral_density:
             for i in range(N-h):
                 self.lagged_covariance[q-h,:,:] += torch.einsum("i,j -> ij", x[i,:], x[i+h,:])
                 self.lagged_covariance[q+h,:,:] += torch.einsum("i,j -> ij", x[i+h,:], x[i,:])
-        self.lagged_covariance = self.lagged_covariance/N
+        self.lagged_covariance /= N
         
         self.hs = np.arange(start=-q,stop=q+0.5,step=1.,dtype="float32")
         self.w = torch.from_numpy(wt_fn(self.hs/q))

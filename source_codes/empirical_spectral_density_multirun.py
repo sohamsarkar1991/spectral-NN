@@ -1,4 +1,4 @@
-def emp_spect_dens_multirun(q):
+def emp_spect_dens_multirun(q,replicates=range(25)):
     import os
     import sys
     import time
@@ -29,7 +29,6 @@ def emp_spect_dens_multirun(q):
     #    os.mkdir("Plots")
 
     dirc = setup.directory
-    replicates = setup.replicates
     
     for repl in replicates:
         print('Example'+str(repl+1)+':')
@@ -47,7 +46,7 @@ def emp_spect_dens_multirun(q):
         print('N='+str(N)+', D='+str(D)+', d='+str(d))
 
         x = torch.from_numpy(x)
-        x = x - torch.mean(x,dim=0,keepdim=True)
+        x -= torch.mean(x,dim=0,keepdim=True)
 
         #if not os.path.isdir(os.path.join("Plots","Ex"+str(repl+1))):
         #    os.mkdir(os.path.join("Plots","Ex"+str(repl+1)))
