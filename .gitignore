@@ -7,5 +7,7 @@ __pycache__
 *.pt
 77-2.Hormann
 fMRI_data
+Makeplots
+Memory_usage
 
 Data_Matern_0.001_3D_**
