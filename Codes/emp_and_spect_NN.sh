@@ -1,39 +1,48 @@
 #!/bin/bash
 
-echo `date`
-
 dim="3D"
-echo "Simulations in ${dim}:"
-
-N=250
-gr_size=25
+cov_type="Matern"
+par=0.001
+gr_size=15
 gam=0.5
-for method in "BM,None" "IBM,None" "Matern,0.001" "Matern,0.01" "Matern,0.1" "Matern,1";
+
+N=1600
+echo `date`
+echo "${dim} ${cov_type}_${par} N=${N}, K=${gr_size}, gamma=${gam}"
+repl=11
+while [ ${repl} -ne 26 ];
 do
-	IFS=',' read -r cov_type par <<< "${method}"
+	echo "Spectral-NN estimator"
+	python Codes/spect_NN.py ${repl}
 	echo `date`
-	if [ ${cov_type} == "Matern" ]
-	then
-		echo "${cov_type} ${par}:"
-		python Codes/datagen.py ${dim} ${N} ${gr_size} ${cov_type} ${par} ${gam}
-	else
-		echo "${cov_type}:"
-		par="None"
-		python Codes/datagen.py ${dim} ${N} ${gr_size} ${cov_type} ${par} ${gam}
-	fi
+	echo "Empirical spectral density estimator"
+	python Codes/empirical.py ${repl}
 	echo `date`
-	echo "Spectral-NN estimator:"
-	python Codes/spect_NN.py
+	repl=$((${repl}+1))
+done
+python Codes/cleanup.py ${dim} "N" ${N} ${gr_size} ${cov_type} ${par} ${gam}
+
+
+for N in 800 400 200 100;
+do
+	rm -r "Data"
+	mkdir "Data"
 	echo `date`
-	echo "Empirical spectral density estimator:"
+	echo "${dim} ${cov_type}_${par} N=${N}, K=${gr_size}, gamma=${gam}"
+	python Codes/datagen.py ${dim} ${N} ${gr_size} ${cov_type} ${par} ${gam}
+	echo `date`
+	cp -r "Data" "Data_Matern_${par}_3D_N=${N}_K=${gr_size}"
 	repl=1
 	while [ ${repl} -ne 26 ];
 	do
-		#echo "${repl}"
+		echo "Spectral-NN estimator"
+		python Codes/spect_NN.py ${repl}
+		echo `date`
+		echo "Empirical spectral density estimator"
 		python Codes/empirical.py ${repl}
+		echo `date`
 		repl=$((${repl}+1))
 	done
-	python Codes/cleanup.py "gr_size" ${N} ${gr_size} ${cov_type} ${par} ${gam}
+	python Codes/cleanup.py ${dim} "N" ${N} ${gr_size} ${cov_type} ${par} ${gam}
 done
-
 

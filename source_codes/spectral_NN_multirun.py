@@ -85,19 +85,12 @@ def spectral_NN_multirun(method,M,L,depth,width,q,replicates=range(25)):
         print("Fitting the model ...")
         start_time = time.time()
         #l_tr = Ifn.spectral_NN_optim(x,u,model,loss,optimizer,epochs=setup.epochs,checkpoint_file=check_file)
-        epoch = Ifn.spectral_NN_optim_best(x,u,model,loss,optimizer,
+        l_tr, epoch = Ifn.spectral_NN_optim_best(x,u,model,loss,optimizer,
                                           epochs=setup.epochs,burn_in=setup.burn_in,interval=setup.interval,
                                           checkpoint_file=check_file)
         fit_time = time.time() - start_time
-        print("Model fitted. Time taken: {:.2f} seconds" .format(fit_time))
-        #print("Best loss achieved at epoch {}" .format(epoch))
-
-        #with torch.no_grad():
-        #    num = loss.loss_fn(x,model(u)).item()
-        #    den = loss.loss_fn(x,0.*x).item()
-        #    train_err = num/den
-        #print("Relative training error: {:.2f}%" .format(train_err*100))
-        ##print("Numerator: {:.4f}, Denominator: {:.4f}" .format(num,den))
+        print("Model fitted. Time taken: {:.2f} seconds. Minimum loss achieved at epoch {}" .format(fit_time,epoch))
+        #print(np.round(l_tr,2))
 
         spect_dens_est = Ifn.spectral_density_evaluation(model, q=q, wt_fn=setup.wt_fn)
         theta_file = dirc+"True_thetas"+str(repl+1)+".dat"
@@ -116,11 +109,11 @@ def spectral_NN_multirun(method,M,L,depth,width,q,replicates=range(25)):
         f_err = open(err_file,"a")
         f_err.write("Example{}:\n" .format(repl+1))
         f_err.write("Fitting time - {:.10f} seconds. Evaluation time - {:.10f} seconds.\n" .format(fit_time,eval_time))
-        f_err.write("Relative test errors - {:.10f}\n" .format(test_err))
+        f_err.write("Relative test error - {:.10f}\n" .format(test_err))
         f_err.write("Cospectra: Error - {:.10f}, Actual - {:.10f}\n" .format(err_cospect,tr_cospect))
         f_err.write("Quadspectra: Error - {:.10f}, Actual - {:.10f}\n\n" .format(err_quadspect,tr_quadspect))
         f_err.close()
-
+        
         """         
         true_loc = np.loadtxt(dirc+"True_locations_grid.dat",dtype="float32")
         if d == 1:

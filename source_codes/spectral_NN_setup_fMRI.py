@@ -1,13 +1,10 @@
 """
-Parameters used to fit the spectral-NN models
+Parameters used to fit the spectral-NN models for fMRI data
 """
 
 import numpy as np
 import torch
 import Important_functions as Ifn
-
-#directory = "C:\\Users\\Soham\\Git\\spectral-NN\\Data\\" # should be the directory where the data are located
-directory = "/home/soham/Git/spectral-NN/Data/"
 
 act_fn = torch.nn.Sigmoid() # activation function
 init = torch.nn.init.xavier_normal_ # initialization method
@@ -16,10 +13,10 @@ init = torch.nn.init.xavier_normal_ # initialization method
 wt_fn = Ifn.kern_parzen
 #wt_fn = Ifn.kern_tukey_hanning
 #wt_fn = Ifn.kern_quadratic_spectral
-loss_grid = 100
 optimizer = torch.optim.Adam
+loss_grid = 100
 lr = 0.01
-epochs = 2500 # number of epochs
-burn_in = 2000 # burn-in period
+epochs = 100 # number of epochs
+burn_in = 75 # burn-in period
 interval = 1  # interval after which the best state will be checked 
-replicates = range(25)
+

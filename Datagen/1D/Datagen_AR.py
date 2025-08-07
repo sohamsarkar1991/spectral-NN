@@ -15,7 +15,7 @@ def datagen(cov="BM",par=None,replicates=25,N=200,gr_size=50,gam=0.5,true_spect_
     true_spect_grid - (boolean) whether to evaluate the true spectrum on a grid
     """
     d = 1 #dimension
-    np.random.seed(54321)
+    #np.random.seed(54321)
     folder = "Data" #where the data will be stored
 
     ### For data generation ###

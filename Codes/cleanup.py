@@ -5,16 +5,17 @@ import os, sys, time, shutil
 import Summarize
 
 if __name__ == "__main__":
-    if len(sys.argv) > 6:
-        idx = str(sys.argv[1])
-        N = int(sys.argv[2])
-        gr_size = int(sys.argv[3])
-        cov_type = str(sys.argv[4])
+    if len(sys.argv) > 7:
+        dim = str(sys.argv[1])
+        idx = str(sys.argv[2])
+        N = int(sys.argv[3])
+        gr_size = int(sys.argv[4])
+        cov_type = str(sys.argv[5])
         if cov_type.lower() == "matern":
-            par = float(sys.argv[5])
+            par = float(sys.argv[6])
         else:
             par = "None"
-        gam = float(sys.argv[6])
+        gam = float(sys.argv[7])
     print("Summary:\n")
     Summarize.__main__(idx=idx)
     print(time.ctime())
@@ -27,12 +28,14 @@ if __name__ == "__main__":
     elif cov_type.lower() == "matern":
         folder = "Matern_"+str(par)
             
-    if not os.path.isdir(os.path.join("Results", folder)):
-        os.mkdir(os.path.join("Results", folder))
-    if not os.path.isdir(os.path.join("Results", folder, "gam="+str(gam)+"_N="+str(N)+"_K="+str(gr_size))):
-        os.mkdir(os.path.join("Results", folder, "gam="+str(gam)+"_N="+str(N)+"_K="+str(gr_size)))
+    if not os.path.isdir(os.path.join("Results", dim)):
+        os.mkdir(os.path.join("Results", dim))
+    if not os.path.isdir(os.path.join("Results", dim, folder)):
+        os.mkdir(os.path.join("Results", dim, folder))
+    if not os.path.isdir(os.path.join("Results", dim, folder, "gam="+str(gam)+"_N="+str(N)+"_K="+str(gr_size))):
+        os.mkdir(os.path.join("Results", dim, folder, "gam="+str(gam)+"_N="+str(N)+"_K="+str(gr_size)))
 
-    new_folder = os.path.join("Results", folder, "gam="+str(gam)+"_N="+str(N)+"_K="+str(gr_size))
+    new_folder = os.path.join("Results", dim, folder, "gam="+str(gam)+"_N="+str(N)+"_K="+str(gr_size))
             
     if os.path.exists(os.path.join("Results", "empirical.txt")):
         shutil.move(os.path.join("Results", "empirical.txt"), os.path.join(new_folder, "empirical.txt"))

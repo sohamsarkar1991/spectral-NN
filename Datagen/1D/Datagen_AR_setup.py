@@ -3,7 +3,7 @@
 
 import data_generation_functions as dn
 import numpy as np
-np.random.seed(54321)
+#np.random.seed(54321)
 
 folder = "Data" #where the data will be stored
 
