@@ -2,32 +2,6 @@
 
 dim="3D"
 cov_type="Matern"
-par=0.001
-gr_size=15
-gam=0.5
-
-for N in 100 200;
-do
-	echo `date`
-	echo "${dim} ${cov_type}_${par} N=${N}, K=${gr_size}, gamma=${gam}"
-	rm -r "Data"
-	cp -r "Data_Matern_${par}_3D_N=${N}_K=${gr_size}" "Data"
-	repl=1
-	while [ ${repl} -ne 26 ];
-	do
-		echo "Spectral-NN estimator"
-		python Codes/spect_NN.py ${repl}
-		echo `date`
-		echo "Empirical spectral density estimator"
-		python Codes/empirical.py ${repl}
-		echo `date`
-		repl=$((${repl}+1))
-	done
-	python Codes/cleanup.py ${dim} "N" ${N} ${gr_size} ${cov_type} ${par} ${gam}
-done
-
-dim="3D"
-cov_type="Matern"
 par=1
 N=250
 gr_size=25
@@ -38,7 +12,6 @@ echo "${dim} ${cov_type}_${par} N=${N}, K=${gr_size}, gamma=${gam}"
 python Codes/datagen.py ${dim} ${N} ${gr_size} ${cov_type} ${par} ${gam}
 cp -r "Data" "Data_Matern_${par}_3D_N=${N}_K=${gr_size}"
 echo `date`
-
 repl=1
 while [ ${repl} -ne 26 ];
 do
