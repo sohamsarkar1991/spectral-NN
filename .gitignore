@@ -1,13 +1,11 @@
 # The following are not tracked
-Data
-Results
-Plots
 .ipynb_checkpoints
 __pycache__
 *.pt
-77-2.Hormann
+Data
+Results
+Plots
 fMRI_data
 Makeplots
 Memory_usage
-
-Data_Matern_0.001_3D_**
+Data_**
