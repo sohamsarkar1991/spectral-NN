@@ -16,7 +16,7 @@ wt_fn = Ifn.kern_parzen
 optimizer = torch.optim.Adam
 loss_grid = 100
 lr = 0.01
-epochs = 100 # number of epochs
-burn_in = 75 # burn-in period
+epochs = 1000 # number of epochs
+burn_in = 750 # burn-in period
 interval = 1  # interval after which the best state will be checked 
 

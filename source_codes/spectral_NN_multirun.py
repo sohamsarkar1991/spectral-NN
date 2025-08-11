@@ -1,16 +1,7 @@
 def spectral_NN_multirun(method,M,L,depth,width,q,replicates=range(25)):
-    import os
-    import sys
-    import time
-    import torch
+    import os, sys, time
     import numpy as np
-    #import matplotlib.pyplot as plt
-
-    #def mat_scale(mat):
-    #    m = np.max(np.abs(mat))
-    #    if m == 0.:
-    #        return 0.000000001
-    #    return m
+    import torch
     
     #sys.path.insert(1, os.path.join("C:\\", "Users", "Soham", "Git", "spectral-NN", "source_codes"))
     sys.path.insert(1, os.path.join("/home", "soham", "Git", "spectral-NN", "source_codes"))
@@ -22,17 +13,7 @@ def spectral_NN_multirun(method,M,L,depth,width,q,replicates=range(25)):
     if not os.path.isdir("Results"):
         os.mkdir("Results")
 
-    #if method.lower()=="shallow":
-    #    err_file = os.path.join("Results","spectral_Shallow_"+str(q)+"_"+str(M)+"_"+str(L)+"_"+str(width)+".txt")
-    #    #plot_folder = "shallow_"+str(q)+"_"+str(M)+"_"+str(L)+"_"+str(width)
-    #else:
-    #    err_file = os.path.join("Results","spectral_"+method+"_"+str(q)+"_"+str(M)+"_"+str(L)+"_"+str(depth)+"_"+str(width)+".txt")
-    #    #plot_folder = method+"_"+str(q)+"_"+str(M)+"_"+str(L)+"_"+str(depth)+"_"+str(width)
     err_file = os.path.join("Results","spectral_NN.txt")
-    #plot_folder = "spectral_NN"
-
-    #if not os.path.isdir("Plots"):
-    #    os.mkdir("Plots")
 
     dirc = setup.directory
     
@@ -53,13 +34,6 @@ def spectral_NN_multirun(method,M,L,depth,width,q,replicates=range(25)):
 
         x = torch.from_numpy(x)
         x -= torch.mean(x,dim=0,keepdim=True)
-
-        #if not os.path.isdir(os.path.join("Plots","Ex"+str(repl+1))):
-        #    os.mkdir(os.path.join("Plots","Ex"+str(repl+1)))
-        #    os.mkdir(os.path.join("Plots","Ex"+str(repl+1),plot_folder))
-        #else:
-        #    if not os.path.isdir(os.path.join("Plots","Ex"+str(repl+1),plot_folder)):
-        #        os.mkdir(os.path.join("Plots","Ex"+str(repl+1),plot_folder))
 
 
         if method.lower()=="shallow":
@@ -90,7 +64,6 @@ def spectral_NN_multirun(method,M,L,depth,width,q,replicates=range(25)):
                                           checkpoint_file=check_file)
         fit_time = time.time() - start_time
         print("Model fitted. Time taken: {:.2f} seconds. Minimum loss achieved at epoch {}" .format(fit_time,epoch))
-        #print(np.round(l_tr,2))
 
         spect_dens_est = Ifn.spectral_density_evaluation(model, q=q, wt_fn=setup.wt_fn)
         theta_file = dirc+"True_thetas"+str(repl+1)+".dat"
@@ -102,9 +75,6 @@ def spectral_NN_multirun(method,M,L,depth,width,q,replicates=range(25)):
         eval_time = time.time() - start_time
         
         print("Relative test error: {:.2f}%" .format(test_err*100))
-        #print("Numerator: {:.4f}, Denominator: {:.4f}" .format(num,den))
-        #print("Cospectra: Error - {:.4f}, Actual - {:.4f}" .format(err_cospect,tr_cospect))
-        #print("Quadspectra: Error - {:.4f}, Actual - {:.4f}" .format(err_quadspect,tr_quadspect))
 
         f_err = open(err_file,"a")
         f_err.write("Example{}:\n" .format(repl+1))
@@ -114,44 +84,4 @@ def spectral_NN_multirun(method,M,L,depth,width,q,replicates=range(25)):
         f_err.write("Quadspectra: Error - {:.10f}, Actual - {:.10f}\n\n" .format(err_quadspect,tr_quadspect))
         f_err.close()
         
-        """         
-        true_loc = np.loadtxt(dirc+"True_locations_grid.dat",dtype="float32")
-        if d == 1:
-            true_loc = true_loc.reshape(-1,1)
-        D_tr = true_loc.shape[0]
-        true_loc = torch.from_numpy(true_loc)
-        
-        true_thetas = np.loadtxt(dirc+"True_thetas_grid.dat",dtype="float32")
-
-        K_theta = len(true_thetas)
-        spect_tr = np.loadtxt(dirc+"True_spectrum_grid.dat",dtype="float32")
-
-        for t, theta in enumerate(true_thetas):
-            theta = true_thetas[t]
-            cospect_fit, quadspect_fit = spect_dens_est.evaluate_grid(theta,true_loc)
-    
-            fig, ax = plt.subplots(figsize=(2.5,2.5),ncols=1)
-            m_ = mat_scale(cospect_fit.numpy())
-            ax.imshow(cospect_fit/m_, origin='lower', cmap='seismic',vmin=-1,vmax=1)
-            ax.set_xticks(np.linspace(0,D_tr-1,3))
-            ax.set_xticklabels([0,0.5,1])
-            ax.set_yticks(np.linspace(0,D_tr-1,3))
-            ax.set_yticklabels([0,0.5,1])
-            ax.set_title("{:.3f}" .format(m_), fontsize=15)
-            fig.savefig(os.path.join("Plots","Ex"+str(repl+1),plot_folder,"Fitted_cospect_"+str(t+1)+".pdf"),
-                bbox_inches="tight",dpi=300)
-    
-            fig, ax = plt.subplots(figsize=(2.5,2.5),ncols=1)
-            m_ = mat_scale(quadspect_fit.numpy())
-            ax.imshow(quadspect_fit/m_, origin='lower', cmap='seismic',vmin=-1,vmax=1)
-            ax.set_xticks(np.linspace(0,D_tr-1,3))
-            ax.set_xticklabels([0,0.5,1])
-            ax.set_yticks(np.linspace(0,D_tr-1,3))
-            ax.set_yticklabels([0,0.5,1])
-            ax.set_title("{:.3f}" .format(m_), fontsize=15)
-            fig.savefig(os.path.join("Plots","Ex"+str(repl+1),plot_folder,"Fitted_quadspect_"+str(t+1)+".pdf"),
-                bbox_inches="tight",dpi=300)
-            plt.close("all")
-        """
- 
     return 0.

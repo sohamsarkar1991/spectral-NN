@@ -2,11 +2,11 @@
 # coding: utf-8
 
 ######################################################################################################
-## Module to create Spectral Neural Network models.
+## Module to create Spectral Neural Network (spectral-NN) models.
 ## A model can be created by using
 ## spectralNNShallow(N,d,M,L,act_fn,init) - for shallow
 ## or spectralNNDeep(N,d,M,L,depth,width,act_fn,init) - for deep
-## or spectralNNDeepshared(N,d,M,L,depth,width,act_fn,init) - for deepshared
+## or spectralNNDeepshared1/2/3(N,d,M,L,depth,width,act_fn,init) - for deepshared
 ## Args: N - Number of fields (integer)
 ##       d - dimension (integer)
 ##       M, L, depth, width - network parameters (integer)
@@ -89,44 +89,7 @@ class spectralNNDeep(torch.nn.Module):
 
         
 ##### Deepshared spectral-NN #####
-class spectralNNDeepshared(torch.nn.Module):
-    ### Deepshared spectral-NN of the first type (weight sharing accross m and h)
-    def __init__(self,N,d,M,L,depth,width,act_fn=torch.nn.Sigmoid(),init=torch.nn.init.xavier_normal_):
-        super(spectralNNDeepshared1, self).__init__()
-        self.N = N
-        self.M = M
-        self.L = L
-        self.depth = depth
-        self.act_fn = act_fn
-        self.init = init
-        self.weight0 = torch.nn.Parameter(torch.empty([width,d],dtype=torch.float32,requires_grad=True)) #weights for the first hidden layer
-        self.bias0 = torch.nn.Parameter(torch.zeros([width,1],dtype=torch.float32,requires_grad=True)) #biases for the first hidden layer
-        self.weight = torch.nn.Parameter(torch.empty([depth-1,width,width],dtype=torch.float32,requires_grad=True)) #weights for the other hidden layers
-        self.bias = torch.nn.Parameter(torch.zeros([depth-1,width,1],dtype=torch.float32,requires_grad=True)) #biases for the other hidden layer
-        self.weight_final = torch.nn.Parameter(torch.empty([M,2*L+1,width],dtype=torch.float32,requires_grad=True)) #weights for the output layer
-        self.bias_final = torch.nn.Parameter(torch.zeros([M,2*L+1,1],dtype=torch.float32,requires_grad=True)) #biases for the output layer
-        self.xi = torch.nn.Parameter(torch.empty([M,N+2*L],dtype=torch.float32,requires_grad=True)) #the multipliers xi_{m,h}
-        init(self.weight0)
-        init(self.weight)
-        init(self.weight_final)
-        init(self.xi)
-        self.params = list([self.weight0,self.bias0,self.weight,self.bias,self.weight_final,self.bias_final,self.xi])
-        
-    def first_step(self, u):
-        u1 = self.act_fn(torch.einsum("kl,ml -> km", self.weight0, u) + self.bias0)
-        for i in range(self.depth-1):
-            u1 = self.act_fn(torch.einsum("kl, lm -> km", self.weight[i], u1) + self.bias[i])
-        return self.act_fn(torch.einsum("ijk,km -> ijm", self.weight_final, u1) + self.bias_final) #an object of size M x 2L+1 x D
-
-    def iter_prod(self, i, G): ## iterated product with the coefficients in xi
-        return torch.einsum("ij,ijk -> k", self.xi[:,i:(i+2*self.L+1)], G).reshape(1,-1)
-
-    def forward(self, u):
-        G = self.first_step(u)
-        return torch.cat([self.iter_prod(i,G) for i in range(self.N)])
-
-
-class spectralNNDeepshared2(torch.nn.Module):
+class spectralNNDeepshared1(torch.nn.Module):
     ### Deepshared spectral-NN of the second type (weight sharing accross h for each m)
     def __init__(self,N,d,M,L,depth,width,act_fn=torch.nn.Sigmoid(),init=torch.nn.init.xavier_normal_):
         super(spectralNNDeepshared2, self).__init__()
@@ -163,7 +126,7 @@ class spectralNNDeepshared2(torch.nn.Module):
         return torch.cat([self.iter_prod(i,G) for i in range(self.N)])
 
 
-class spectralNNDeepshared3(torch.nn.Module):
+class spectralNNDeepshared2(torch.nn.Module):
     ### Deepshared spectral-NN of the third type (weight sharing accross m for each h)
     def __init__(self,N,d,M,L,depth,width,act_fn=torch.nn.Sigmoid(),init=torch.nn.init.xavier_normal_):
         super(spectralNNDeepshared3, self).__init__()
@@ -198,3 +161,41 @@ class spectralNNDeepshared3(torch.nn.Module):
     def forward(self, u):
         G = self.first_step(u)
         return torch.cat([self.iter_prod(i,G) for i in range(self.N)])
+
+
+class spectralNNDeepshared3(torch.nn.Module):
+    ### Deepshared spectral-NN of the first type (weight sharing accross m and h)
+    def __init__(self,N,d,M,L,depth,width,act_fn=torch.nn.Sigmoid(),init=torch.nn.init.xavier_normal_):
+        super(spectralNNDeepshared1, self).__init__()
+        self.N = N
+        self.M = M
+        self.L = L
+        self.depth = depth
+        self.act_fn = act_fn
+        self.init = init
+        self.weight0 = torch.nn.Parameter(torch.empty([width,d],dtype=torch.float32,requires_grad=True)) #weights for the first hidden layer
+        self.bias0 = torch.nn.Parameter(torch.zeros([width,1],dtype=torch.float32,requires_grad=True)) #biases for the first hidden layer
+        self.weight = torch.nn.Parameter(torch.empty([depth-1,width,width],dtype=torch.float32,requires_grad=True)) #weights for the other hidden layers
+        self.bias = torch.nn.Parameter(torch.zeros([depth-1,width,1],dtype=torch.float32,requires_grad=True)) #biases for the other hidden layer
+        self.weight_final = torch.nn.Parameter(torch.empty([M,2*L+1,width],dtype=torch.float32,requires_grad=True)) #weights for the output layer
+        self.bias_final = torch.nn.Parameter(torch.zeros([M,2*L+1,1],dtype=torch.float32,requires_grad=True)) #biases for the output layer
+        self.xi = torch.nn.Parameter(torch.empty([M,N+2*L],dtype=torch.float32,requires_grad=True)) #the multipliers xi_{m,h}
+        init(self.weight0)
+        init(self.weight)
+        init(self.weight_final)
+        init(self.xi)
+        self.params = list([self.weight0,self.bias0,self.weight,self.bias,self.weight_final,self.bias_final,self.xi])
+        
+    def first_step(self, u):
+        u1 = self.act_fn(torch.einsum("kl,ml -> km", self.weight0, u) + self.bias0)
+        for i in range(self.depth-1):
+            u1 = self.act_fn(torch.einsum("kl, lm -> km", self.weight[i], u1) + self.bias[i])
+        return self.act_fn(torch.einsum("ijk,km -> ijm", self.weight_final, u1) + self.bias_final) #an object of size M x 2L+1 x D
+
+    def iter_prod(self, i, G): ## iterated product with the coefficients in xi
+        return torch.einsum("ij,ijk -> k", self.xi[:,i:(i+2*self.L+1)], G).reshape(1,-1)
+
+    def forward(self, u):
+        G = self.first_step(u)
+        return torch.cat([self.iter_prod(i,G) for i in range(self.N)])
+
