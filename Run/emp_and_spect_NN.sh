@@ -9,19 +9,19 @@ gam=0.5
 
 echo `date`
 echo "${dim} ${cov_type}_${par} N=${N}, K=${gr_size}, gamma=${gam}"
-python Codes/datagen.py ${dim} ${N} ${gr_size} ${cov_type} ${par} ${gam}
+python Run/datagen.py ${dim} ${N} ${gr_size} ${cov_type} ${par} ${gam}
 cp -r "Data" "Data_Matern_${par}_3D_N=${N}_K=${gr_size}"
 echo `date`
 repl=1
 while [ ${repl} -ne 26 ];
 do
 	echo "Spectral-NN estimator"
-	python Codes/spect_NN.py ${repl}
+	python Run/spect_NN.py ${repl}
 	echo `date`
 	echo "Empirical spectral density estimator"
-	python Codes/empirical.py ${repl}
+	python Run/empirical.py ${repl}
 	echo `date`
 	repl=$((${repl}+1))
 done
-python Codes/cleanup.py ${dim} "N" ${N} ${gr_size} ${cov_type} ${par} ${gam}
+python Run/cleanup.py ${dim} "N" ${N} ${gr_size} ${cov_type} ${par} ${gam}
 

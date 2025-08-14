@@ -4,7 +4,7 @@ Spectral density estimator for functional time series using neural network archi
 
 See ``Demo.ipynb`` for demonstration and details about the available functions.
 
-Codes used to produce the results in the paper are in the **`Codes`** folder.
+Codes used to produce the results in the paper are in the **`Run`** folder.
 
 
 ## Reference
