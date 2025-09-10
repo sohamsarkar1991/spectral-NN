@@ -2,26 +2,44 @@
 
 dim="3D"
 cov_type="Matern"
-par=1
+par=0.001
 N=250
-gr_size=25
 gam=0.5
 
-echo `date`
-echo "${dim} ${cov_type}_${par} N=${N}, K=${gr_size}, gamma=${gam}"
-python Run/datagen.py ${dim} ${N} ${gr_size} ${cov_type} ${par} ${gam}
-cp -r "Data" "Data_Matern_${par}_3D_N=${N}_K=${gr_size}"
-echo `date`
-repl=1
-while [ ${repl} -ne 26 ];
+: "for gr_size in 10 15 20 25 30;
 do
-	echo "Spectral-NN estimator"
-	python Run/spect_NN.py ${repl}
 	echo `date`
-	echo "Empirical spectral density estimator"
-	python Run/empirical.py ${repl}
+	echo "${dim} ${cov_type}_${par} N=${N}, K=${gr_size}, gamma=${gam}"
+	python Run/datagen.py ${dim} ${N} ${gr_size} ${cov_type} ${par} ${gam}
+	cp -r "Data" "Data_Matern_${par}_3D_N=${N}_K=${gr_size}"
 	echo `date`
-	repl=$((${repl}+1))
+	repl=1
+	while [ ${repl} -ne 26 ];
+	do
+		echo "Spectral-NN estimator"
+		python Run/spect_NN.py ${repl}
+		echo `date`
+		echo "Empirical spectral density estimator"
+		python Run/empirical.py ${repl}
+		echo `date`
+		repl=$((${repl}+1))
+	done
+	python Run/cleanup.py ${dim} "N" ${N} ${gr_size} ${cov_type} ${par} ${gam}
 done
-python Run/cleanup.py ${dim} "N" ${N} ${gr_size} ${cov_type} ${par} ${gam}
+"
+for gr_size in 10 15 20 25 30
+do
+	echo `date`
+	echo "${dim} ${cov_type}_${par} N=${N}, K=${gr_size}, gamma=${gam}"
+	cp -r "Data_Matern_${par}_3D_N=${N}_K=${gr_size}" "Data"
 
+	repl=1
+	while [ ${repl} -ne 2 ];
+	do
+		python Run/spect_NN_gpu.py ${repl}
+		echo `date`
+		repl=$((${repl}+1))
+	done
+python Run/cleanup.py ${dim} "Gr_size" ${N} ${gr_size} ${cov_type} ${par} ${gam}
+rm -r "Data"
+done
