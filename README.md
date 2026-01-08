@@ -8,5 +8,6 @@ Codes used to produce the results in the paper are in the **`Run`** folder.
 
 
 ## Reference
-Neda Mohammadi, Soham Sarkar, and Piotr Kokoszka (2026) Deep learning estimation of the spectral density of functional time series on large domains__[arXiv preprint](https://arxiv.org/abs/2601.00284)__
+Neda Mohammadi, Soham Sarkar, and Piotr Kokoszka (2026) Deep learning estimation of the spectral density of functional time series on large domains __[arXiv preprint](https://arxiv.org/abs/2601.00284)__
+
 
